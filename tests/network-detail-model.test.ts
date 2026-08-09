@@ -13,6 +13,9 @@ describe("network editor model", () => {
     const prefix = generated.route.replace(/0\/24$/, "");
     assert.equal(generated.start, `${prefix}1`);
     assert.equal(generated.end, `${prefix}254`);
+    const [, second, third] = generated.route.match(/^10\.(\d+)\.(\d+)\./)!;
+    assert.ok(Number(second) >= 16 && Number(second) <= 239);
+    assert.ok(Number(third) >= 1 && Number(third) <= 253);
   });
 
   it("maps API member data into an editable draft without losing policy fields", () => {

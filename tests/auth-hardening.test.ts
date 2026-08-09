@@ -33,10 +33,15 @@ after(() => {
 describe("persistent login throttling", () => {
   it("uses a separate, privacy-preserving MFA bucket", () => {
     const bucket = mfaRateLimitBucket("user-123");
+    const accountBucket = loginRateLimitBuckets(
+      new Request("https://control.example/api/auth/login"),
+      "user-123",
+    )[0];
     assert.equal(bucket.scope, "mfa");
     assert.equal(bucket.limit, 10);
     assert.match(bucket.key, /^mfa:[a-f0-9]{64}$/);
     assert.equal(bucket.key.includes("user-123"), false);
+    assert.notEqual(bucket.key.slice(4), accountBucket.key.slice(8));
   });
 
   it("limits account attempts in SQLite and can clear the bucket", () => {

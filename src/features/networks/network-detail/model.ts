@@ -89,10 +89,17 @@ export function memberDraftFrom(member: NetworkMember): MemberDraft {
   };
 }
 
+function uniformRandomOffset(range: number) {
+  const limit = Math.floor(256 / range) * range;
+  const sample = new Uint8Array(1);
+  do crypto.getRandomValues(sample);
+  while (sample[0] >= limit);
+  return sample[0] % range;
+}
+
 export function generatedSubnet() {
-  const bytes = crypto.getRandomValues(new Uint8Array(2));
-  const second = 16 + (bytes[0] % 224);
-  const third = 1 + (bytes[1] % 253);
+  const second = 16 + uniformRandomOffset(224);
+  const third = 1 + uniformRandomOffset(253);
   return {
     route: `10.${second}.${third}.0/24`,
     start: `10.${second}.${third}.1`,

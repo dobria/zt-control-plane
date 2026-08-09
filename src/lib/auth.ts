@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { cookies, headers } from "next/headers";
 import { db, publicUser, queryOne, type UserRow } from "@/lib/database";
@@ -8,6 +8,7 @@ import { AppError } from "@/lib/errors";
 import { getActiveControllerId } from "@/lib/controller-registry";
 import { getActiveNodeId } from "@/lib/node-registry";
 import { getAppSettings } from "@/lib/settings";
+import { getSecretKey } from "@/lib/secrets";
 
 const COOKIE_NAME = "ztcp_session";
 const MFA_CHALLENGE_COOKIE = "ztcp_mfa_challenge";
@@ -16,8 +17,12 @@ const MAX_MFA_CHALLENGE_ATTEMPTS = 5;
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_RATE_BUCKETS = 5_000;
 
-function tokenHash(token: string) {
-  return createHash("sha256").update(token).digest("hex");
+function keyedDigest(purpose: string, value: string) {
+  return createHmac("sha256", getSecretKey())
+    .update(purpose, "utf8")
+    .update("\0", "utf8")
+    .update(value, "utf8")
+    .digest("hex");
 }
 function sessionHours() {
   return getAppSettings().sessionHours;
@@ -78,7 +83,7 @@ export async function createSession(userId: string) {
     .prepare(
       "INSERT INTO sessions (token_hash,user_id,created_at,expires_at) VALUES (?,?,?,?)",
     )
-    .run(tokenHash(token), userId, now, expiresAt);
+    .run(keyedDigest("session", token), userId, now, expiresAt);
   const headerStore = await headers();
   (await cookies()).set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -113,7 +118,7 @@ export async function createMfaLoginChallenge(userId: string) {
          (token_hash,user_id,created_at,expires_at,attempts)
          VALUES (?,?,?,?,0)`,
       )
-      .run(tokenHash(token), userId, now, expiresAt);
+    .run(keyedDigest("mfa-challenge", token), userId, now, expiresAt);
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -141,7 +146,7 @@ export async function currentMfaLoginChallenge(): Promise<MfaLoginChallenge | nu
     `SELECT c.user_id,c.attempts,c.expires_at
      FROM mfa_login_challenges c JOIN users u ON u.id=c.user_id
      WHERE c.token_hash=? AND c.expires_at>? AND u.disabled=0`,
-    tokenHash(token),
+    keyedDigest("mfa-challenge", token),
     Date.now(),
   );
   if (!row || row.attempts >= MAX_MFA_CHALLENGE_ATTEMPTS) return null;
@@ -156,7 +161,7 @@ export async function recordMfaChallengeFailure() {
       .prepare(
         "UPDATE mfa_login_challenges SET attempts=attempts+1 WHERE token_hash=? AND expires_at>?",
       )
-      .run(tokenHash(token), Date.now()).changes,
+      .run(keyedDigest("mfa-challenge", token), Date.now()).changes,
   );
 }
 
@@ -167,7 +172,7 @@ export async function clearMfaLoginChallenge() {
   if (token)
     db()
       .prepare("DELETE FROM mfa_login_challenges WHERE token_hash=?")
-      .run(tokenHash(token));
+      .run(keyedDigest("mfa-challenge", token));
   store.set(MFA_CHALLENGE_COOKIE, "", {
     httpOnly: true,
     sameSite: "strict",
@@ -185,7 +190,7 @@ export async function destroySession() {
   if (token)
     db()
       .prepare("DELETE FROM sessions WHERE token_hash=?")
-      .run(tokenHash(token));
+      .run(keyedDigest("session", token));
   store.set(COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "strict",
@@ -216,7 +221,7 @@ export async function currentUser(): Promise<PublicUser | null> {
     LEFT JOIN user_mfa m ON m.user_id=u.id
     WHERE s.token_hash=? AND s.expires_at>? AND u.disabled=0
   `,
-    tokenHash(token),
+    keyedDigest("session", token),
     Date.now(),
   );
   if (!row) return null;
@@ -284,7 +289,7 @@ export interface LoginRateBucket {
 
 export function mfaRateLimitBucket(userId: string): LoginRateBucket {
   return {
-    key: `mfa:${createHash("sha256").update(userId).digest("hex")}`,
+    key: `mfa:${keyedDigest("rate-limit:mfa", userId)}`,
     limit: 10,
     scope: "mfa",
   };
@@ -293,7 +298,7 @@ export function mfaRateLimitBucket(userId: string): LoginRateBucket {
 export function loginRateLimitBuckets(request: Request, userEmail: string) {
   const buckets: LoginRateBucket[] = [
     {
-      key: `account:${createHash("sha256").update(userEmail).digest("hex")}`,
+      key: `account:${keyedDigest("rate-limit:account", userEmail)}`,
       limit: 8,
       scope: "account",
     },
@@ -310,7 +315,7 @@ export function loginRateLimitBuckets(request: Request, userEmail: string) {
     const address = isIP(forwarded) ? forwarded : isIP(realIp) ? realIp : "";
     if (address)
       buckets.push({
-        key: `ip:${createHash("sha256").update(address).digest("hex")}`,
+        key: `ip:${keyedDigest("rate-limit:ip", address)}`,
         limit: 40,
         scope: "ip",
       });

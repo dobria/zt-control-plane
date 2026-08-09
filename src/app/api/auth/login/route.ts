@@ -12,7 +12,12 @@ import {
 } from "@/lib/auth";
 import { db, publicUser, queryOne, type UserRow } from "@/lib/database";
 import { AppError, jsonError } from "@/lib/errors";
-import { dummyPasswordHash, verifyPassword } from "@/lib/passwords";
+import {
+  dummyPasswordHash,
+  hashPassword,
+  passwordHashNeedsUpgrade,
+  verifyPassword,
+} from "@/lib/passwords";
 import { email, jsonBody, requiredText } from "@/lib/validation";
 import { writeAudit } from "@/lib/audit";
 import { isMfaEnabled } from "@/lib/mfa";
@@ -66,6 +71,12 @@ export async function POST(request: Request) {
         401,
         "INVALID_CREDENTIALS",
       );
+    }
+    if (passwordHashNeedsUpgrade(user.password_hash)) {
+      user.password_hash = await hashPassword(password);
+      db()
+        .prepare("UPDATE users SET password_hash=?,updated_at=? WHERE id=?")
+        .run(user.password_hash, Date.now(), user.id);
     }
     clearLoginRateLimit(
       rateBuckets.filter((bucket) => bucket.scope === "account"),
