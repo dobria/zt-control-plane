@@ -168,3 +168,12 @@ all welcome. Start with
 [CONTRIBUTING.md](CONTRIBUTING.md). Architecture and operational behavior are
 documented in [Architecture](docs/ARCHITECTURE.md) and
 [Operations](docs/OPERATIONS.md).
+
+## Support the project
+
+ZT Control Plane will stay open source. If it saves you time and you would like
+to help fund maintenance, security work, and better documentation, you can
+[sponsor the project through GitHub Sponsors](https://github.com/sponsors/dobria).
+
+Sponsorship is always optional. Stars, useful bug reports, documentation fixes,
+and thoughtful contributions help the project just as much.
