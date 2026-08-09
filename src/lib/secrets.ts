@@ -5,10 +5,13 @@ import {
   randomBytes,
 } from "node:crypto";
 import {
-  chmodSync,
-  existsSync,
+  closeSync,
+  constants,
+  fchmodSync,
+  fstatSync,
   mkdirSync,
-  readFileSync,
+  openSync,
+  readSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -30,21 +33,55 @@ export function getSecretKey() {
   const keyPath =
     process.env.APP_SECRET_FILE || path.join(dataDirectory, "app.secret");
   mkdirSync(path.dirname(keyPath), { recursive: true });
-  if (!existsSync(/* turbopackIgnore: true */ keyPath)) {
-    writeFileSync(keyPath, randomBytes(32).toString("hex"), {
-      mode: 0o600,
-      flag: "wx",
-    });
+  const noFollow = process.platform === "win32" ? 0 : constants.O_NOFOLLOW;
+  let descriptor: number | null = null;
+  try {
+    try {
+      descriptor = openSync(
+        /* turbopackIgnore: true */ keyPath,
+        constants.O_CREAT | constants.O_EXCL | constants.O_RDWR | noFollow,
+        0o600,
+      );
+      writeFileSync(descriptor, randomBytes(32).toString("hex"), "utf8");
+    } catch (error) {
+      if (descriptor !== null) {
+        closeSync(descriptor);
+        descriptor = null;
+      }
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      descriptor = openSync(
+        /* turbopackIgnore: true */ keyPath,
+        constants.O_RDWR | noFollow,
+      );
+    }
+
+    const metadata = fstatSync(descriptor);
+    if (!metadata.isFile() || (process.platform !== "win32" && metadata.nlink !== 1))
+      throw new Error("The persistent application secret must be a regular file.");
+    fchmodSync(descriptor, 0o600);
+    if (metadata.size > 1024)
+      throw new Error("The persistent application secret is invalid.");
+    const contents = Buffer.alloc(metadata.size);
+    let bytesRead = 0;
+    while (bytesRead < contents.length) {
+      const chunkSize = readSync(
+        descriptor,
+        contents,
+        bytesRead,
+        contents.length - bytesRead,
+        bytesRead,
+      );
+      if (chunkSize === 0) break;
+      bytesRead += chunkSize;
+    }
+    const stored = contents.subarray(0, bytesRead).toString("utf8").trim();
+    if (!/^[0-9a-f]{64}$/i.test(stored))
+      throw new Error("The persistent application secret is invalid.");
+    cachedKey = Buffer.from(stored, "hex");
+    return cachedKey;
+  } finally {
+    if (descriptor !== null) closeSync(descriptor);
   }
-  chmodSync(keyPath, 0o600);
-  const stored = readFileSync(
-    /* turbopackIgnore: true */ keyPath,
-    "utf8",
-  ).trim();
-  if (!/^[0-9a-f]{64}$/i.test(stored))
-    throw new Error("The persistent application secret is invalid.");
-  cachedKey = Buffer.from(stored, "hex");
-  return cachedKey;
 }
 
 export function encryptJson(value: Record<string, unknown>) {
