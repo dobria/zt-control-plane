@@ -1,0 +1,30 @@
+# Optional local build containing ZeroTier One's embedded controller.
+# Read docs/EMBEDDED_CONTROLLER.md before using this overlay. The upstream
+# controller is source-available, not open source, and commercial use requires
+# a separate license from ZeroTier, Inc.
+services:
+  control-plane:
+    build:
+      target: embedded-runtime
+      args:
+        ZEROTIER_VERSION: "1.16.2"
+        ZEROTIER_SHA256: "2c607f573c6e38815433af289d364a689a203b18b51125f06c4472014d0657f0"
+    # The embedded runtime must create the ZeroTier state symlink and operate
+    # the TUN device. Keep the standard image read-only; relax only this opt-in
+    # profile and add the minimum process/file capabilities its root entrypoint
+    # needs before it drops the web process to the unprivileged user.
+    read_only: false
+    cap_add:
+      - CHOWN
+      - NET_ADMIN
+      - NET_RAW
+      - SETGID
+      - SETUID
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "${ZT_UDP_PORT:-9994}:9993/udp"
+    environment:
+      EMBEDDED_ZEROTIER: "1"
+      ZT_LOCAL_API_URL: "http://127.0.0.1:9993"
+      ZT_LOCAL_TOKEN_PATH: "/var/lib/zerotier-one/authtoken.secret"

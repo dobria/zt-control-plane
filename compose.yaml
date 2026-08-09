@@ -1,0 +1,33 @@
+name: "${COMPOSE_PROJECT_NAME:-zerotier-control-plane}"
+
+services:
+  control-plane:
+    platform: "${DOCKER_PLATFORM:-linux/amd64}"
+    image: "${CONTROL_PLANE_IMAGE:-zerotier-control-plane:local}"
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    ports:
+      - "${WEB_PORT:-3100}:3000/tcp"
+    environment:
+      APP_SECRET: "${APP_SECRET:-}"
+      APP_SETUP_TOKEN: "${APP_SETUP_TOKEN:-}"
+      APP_PUBLIC_URL: "${APP_PUBLIC_URL:-}"
+      APP_SECURE_COOKIES: "${APP_SECURE_COOKIES:-0}"
+      SESSION_HOURS: "${SESSION_HOURS:-12}"
+      TRUST_PROXY: "${TRUST_PROXY:-0}"
+      IP_ALLOWLIST_BYPASS: "${IP_ALLOWLIST_BYPASS:-0}"
+      EMBEDDED_ZEROTIER: "0"
+    volumes:
+      - control-plane-data:/data
+
+volumes:
+  control-plane-data:

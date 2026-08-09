@@ -1,0 +1,49 @@
+name: Bug report
+description: Report reproducible behavior in ZT Control Plane.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not paste tokens, passwords, private identities, databases, backups,
+        or unredacted diagnostics. Report security issues privately.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.0.0 or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime mode
+      options:
+        - Standard control plane
+        - Optional embedded controller
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include the expected result and sanitized reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Docker/host platform, browser, provider type, and reverse proxy.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed credentials and private infrastructure data.
+          required: true
+        - label: This is not a confidential security report.
+          required: true
