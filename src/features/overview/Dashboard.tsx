@@ -32,6 +32,10 @@ function actionLabel(action: string) {
   return action.replaceAll(".", " ");
 }
 
+function healthLabel(health: string) {
+  return health === "disabled" ? "paused" : health;
+}
+
 export function Dashboard() {
   const auth = useAuth();
   const [snapshot, setSnapshot] = useState<OverviewSnapshot | null>(null);
@@ -246,7 +250,7 @@ export function Dashboard() {
                     </small>
                   </span>
                   <span className={`status-pill ${controller.health}`}>
-                    {controller.health}
+                    {healthLabel(controller.health)}
                   </span>
                 </button>
               ))
@@ -320,7 +324,7 @@ export function Dashboard() {
                       </small>
                     </span>
                     <span className={`status-pill ${controller.health}`}>
-                      {controller.health}
+                      {healthLabel(controller.health)}
                     </span>
                   </button>
                 ))}

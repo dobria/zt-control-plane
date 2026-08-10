@@ -79,7 +79,7 @@ export function ControllerContext({
   if (!controller) return null;
   const activeControllerId = controller.id;
   const status = !controller.enabled
-    ? "Disabled"
+    ? "Paused"
     : controller.lastOnline === false
       ? "Offline"
       : controller.lastOnline === null

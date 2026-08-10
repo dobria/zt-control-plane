@@ -22,7 +22,11 @@ export function controllerAdapterFor(
   if (!controller)
     throw new AppError("Controller not found.", 404, "CONTROLLER_NOT_FOUND");
   if (!controller.enabled)
-    throw new AppError("Controller is disabled.", 409, "CONTROLLER_DISABLED");
+    throw new AppError(
+      "Controller connection is paused.",
+      409,
+      "CONTROLLER_DISABLED",
+    );
   const credentials = credentialsFor(controller);
   if (controller.type === "central_v1" || controller.type === "central_v2")
     return new CentralAdapter(controller, credentials as CentralCredentials);

@@ -4,6 +4,7 @@ import {
   deleteController,
   getController,
   publicController,
+  setControllerEnabled,
   updateController,
 } from "@/lib/controller-registry";
 import { AppError, jsonError } from "@/lib/errors";
@@ -34,6 +35,7 @@ export async function PUT(request: Request, context: Context) {
   let userId: string | null = null;
   let controllerId: string | null = null;
   let target = "unknown";
+  let action = "controller.update";
   try {
     assertSameOrigin(request);
     const user = await requireUser("controllers:write");
@@ -45,6 +47,22 @@ export async function PUT(request: Request, context: Context) {
       throw new AppError("Controller not found.", 404, "CONTROLLER_NOT_FOUND");
     target = current.name;
     const body = await jsonBody(request);
+    const enabled = booleanValue(body.enabled, "Connection active", true);
+    if (enabled !== current.enabled)
+      action = enabled ? "controller.resume" : "controller.pause";
+    if (current.embedded) {
+      const controller = setControllerEnabled(id, enabled);
+      writeAudit({
+        userId: user.id,
+        controllerId: id,
+        action,
+        method: "PUT",
+        target: controller.name,
+        status: 200,
+        ok: true,
+      });
+      return NextResponse.json({ controller: publicController(controller) });
+    }
     const credentials =
       current.type === "mikrotik"
         ? optionalText(body.password, 512)
@@ -71,13 +89,13 @@ export async function PUT(request: Request, context: Context) {
               networkGroupId: optionalText(body.networkGroupId, 160),
             }
           : current.configuration,
-      enabled: booleanValue(body.enabled, "Enabled", true),
+      enabled,
       tlsVerify: booleanValue(body.tlsVerify, "TLS verification", true),
     });
     writeAudit({
       userId: user.id,
       controllerId: id,
-      action: "controller.update",
+      action,
       method: "PUT",
       target: controller.name,
       status: 200,
@@ -88,7 +106,7 @@ export async function PUT(request: Request, context: Context) {
     writeFailureAudit(error, {
       userId,
       controllerId,
-      action: "controller.update",
+      action,
       method: "PUT",
       target,
     });
