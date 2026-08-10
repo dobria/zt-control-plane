@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { api } from "@/lib/client-api";
+import { AppFooter } from "@/shared/layout/AppFooter";
 import { AuthProvider, useAuth } from "@/shared/providers/AuthContext";
 
 const publicPaths = new Set(["/login", "/setup"]);
@@ -171,6 +172,7 @@ function Frame({ children }: { children: ReactNode }) {
         />
       )}
       <main className="content">{children}</main>
+      <AppFooter />
     </div>
   );
 }
@@ -199,7 +201,12 @@ function Boundary({ children }: { children: ReactNode }) {
       </main>
     );
   if (publicPaths.has(pathname))
-    return <main className="auth-page">{children}</main>;
+    return (
+      <div className="auth-shell">
+        <main className="auth-page">{children}</main>
+        <AppFooter compact />
+      </div>
+    );
   if (setupRequired || !user)
     return (
       <div className="app-loading">

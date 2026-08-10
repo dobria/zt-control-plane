@@ -3540,6 +3540,18 @@ html[data-reduced-motion="true"] *::after {
   .content {
     padding: 34px 18px 70px;
   }
+  .app-footer-inner {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .app-footer-main {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .app-footer-links {
+    justify-content: flex-start;
+  }
   .top-navigation {
     padding: 0 18px;
   }
@@ -3631,6 +3643,12 @@ html[data-reduced-motion="true"] *::after {
 }
 
 @media (max-width: 620px) {
+  .app-footer-links {
+    gap: 9px 16px;
+  }
+  .app-footer-disclaimer {
+    line-height: 1.55;
+  }
   .inventory-filters,
   .node-inventory-filters {
     grid-template-columns: 1fr;
