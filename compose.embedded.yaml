@@ -4,6 +4,7 @@
 # a separate license from ZeroTier, Inc.
 services:
   control-plane:
+    image: "${EMBEDDED_CONTROL_PLANE_IMAGE:-zerotier-control-plane-embedded:local}"
     build:
       target: embedded-runtime
       args:
@@ -20,6 +21,7 @@ services:
       - NET_RAW
       - SETGID
       - SETUID
+      - SYS_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:

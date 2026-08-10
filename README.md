@@ -122,8 +122,20 @@ The embedded mode compiles ZeroTier One with `ZT_NONFREE=1` and runs it in the
 same container:
 
 ```sh
+docker compose -f compose.embedded.standalone.yaml up -d --build
+```
+
+The standalone file is suitable for platforms that accept one Compose file.
+The equivalent overlay-based command remains available for local development:
+
+```sh
 docker compose -f compose.yaml -f compose.embedded.yaml up -d --build
 ```
+
+The host must expose `/dev/net/tun`. Embedded mode grants `NET_ADMIN` and
+`SYS_ADMIN` so ZeroTier can create its TAP interface; treat this container as a
+privileged infrastructure component and keep the web interface private or
+behind a hardened reverse proxy.
 
 Before using or sharing that image, read
 [Embedded controller licensing](docs/EMBEDDED_CONTROLLER.md). The short version:

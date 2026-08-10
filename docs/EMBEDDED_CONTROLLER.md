@@ -46,6 +46,19 @@ overlay:
 docker compose -f compose.yaml -f compose.embedded.yaml build
 ```
 
+For platforms that accept one Compose file, use the equivalent standalone
+deployment:
+
+```sh
+docker compose -f compose.embedded.standalone.yaml up -d --build
+```
+
+Both variants persist application data and the complete ZeroTier state under
+the `control-plane-data` volume mounted at `/data`. Back up that volume before
+upgrades or deployment changes. Embedded mode requires `/dev/net/tun` plus the
+declared `NET_ADMIN` and `SYS_ADMIN` capabilities to participate as a client
+node as well as operate the controller.
+
 The project does not plan to publish this target as its standard open-source
 container artifact. A redistributor must independently ensure that its use,
 binary distribution, source availability, notices, trademarks, and any

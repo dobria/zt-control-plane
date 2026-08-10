@@ -63,9 +63,17 @@ private container network.
 
 ## Optional embedded mode
 
-The embedded overlay additionally needs `/dev/net/tun`, `NET_ADMIN`, `NET_RAW`,
-and a directly published UDP port. It builds and includes upstream ZeroTier
-One code governed by separate licenses:
+The embedded deployment additionally needs `/dev/net/tun`, `NET_ADMIN`,
+`SYS_ADMIN`, `NET_RAW`, and a directly published UDP port. `SYS_ADMIN` is a
+broad capability, so use embedded mode only on a host and trust boundary where
+that access is acceptable. It builds and includes upstream ZeroTier One code
+governed by separate licenses. For a single-file deployment:
+
+```sh
+docker compose -f compose.embedded.standalone.yaml up -d --build
+```
+
+The equivalent overlay-based command is:
 
 ```sh
 docker compose -f compose.yaml -f compose.embedded.yaml up -d --build
@@ -84,8 +92,12 @@ project's target identity.
 3. Route the domain to container TCP 3000 and enable HTTPS.
 4. Supply the production environment variables described above as secrets.
 5. For the standard mode, use `compose.yaml` only.
-6. For embedded mode, configure both Compose files and the required TUN,
-   capabilities, and UDP publishing if supported by the host.
+6. For embedded mode, select `compose.embedded.standalone.yaml`; confirm that
+   the host exposes `/dev/net/tun` and permits the declared capabilities and
+   UDP publishing.
+7. Keep the `control-plane-data` volume across every deployment. It contains
+   both `/data/app` and `/data/zerotier`; removing it changes the embedded node
+   identity and loses controller state.
 
 `WEB_PORT` is useful for direct Compose publishing but may be unnecessary when
 Coolify connects through its internal proxy network. Never expose the internal

@@ -56,6 +56,11 @@ const allowedMemberKeys = [
   "remoteTraceLevel",
   "remoteTraceTarget",
 ];
+const joinVerificationDelaysMs = [0, 100, 250];
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
 function pick(input: Record<string, unknown>, keys: string[]) {
   return Object.fromEntries(
@@ -377,11 +382,21 @@ export class ZeroTierAdapter implements ControllerAdapter {
       allowGlobal: input.allowGlobal ?? false,
       allowDNS: input.allowDNS ?? false,
     };
-    return normalizeClientNetwork(
-      await this.request<Record<string, unknown>>(`/network/${networkId}`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
+    await this.request<Record<string, unknown>>(`/network/${networkId}`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    for (const delay of joinVerificationDelaysMs) {
+      if (delay) await wait(delay);
+      const joined = (await this.listClientNetworks()).find(
+        (network) => network.id.toLowerCase() === networkId.toLowerCase(),
+      );
+      if (joined) return joined;
+    }
+    throw new AdapterError(
+      "ZeroTier accepted the join request, but the network did not appear on the node. Verify that /dev/net/tun is mounted and the container has NET_ADMIN and SYS_ADMIN capabilities.",
+      502,
+      { networkId },
     );
   }
   async updateClientNetwork(networkId: string, input: Partial<ClientNetwork>) {

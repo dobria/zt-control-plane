@@ -1,0 +1,51 @@
+# Opt-in, self-contained deployment with ZeroTier One and its embedded
+# controller in the same container. Review docs/EMBEDDED_CONTROLLER.md before
+# use: the upstream controller code is source-available, not open source.
+name: "${COMPOSE_PROJECT_NAME:-zerotier-control-plane}"
+
+services:
+  control-plane:
+    platform: "${DOCKER_PLATFORM:-linux/amd64}"
+    image: "${EMBEDDED_CONTROL_PLANE_IMAGE:-zerotier-control-plane-embedded:local}"
+    build:
+      context: .
+      target: embedded-runtime
+      args:
+        ZEROTIER_VERSION: "1.16.2"
+        ZEROTIER_SHA256: "2c607f573c6e38815433af289d364a689a203b18b51125f06c4472014d0657f0"
+    restart: unless-stopped
+    read_only: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - NET_ADMIN
+      - NET_RAW
+      - SETGID
+      - SETUID
+      - SYS_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    ports:
+      - "${WEB_PORT:-3100}:3000/tcp"
+      - "${ZT_UDP_PORT:-9994}:9993/udp"
+    environment:
+      APP_SECRET: "${APP_SECRET:-}"
+      APP_SETUP_TOKEN: "${APP_SETUP_TOKEN:-}"
+      APP_PUBLIC_URL: "${APP_PUBLIC_URL:-}"
+      APP_SECURE_COOKIES: "${APP_SECURE_COOKIES:-0}"
+      SESSION_HOURS: "${SESSION_HOURS:-12}"
+      TRUST_PROXY: "${TRUST_PROXY:-0}"
+      IP_ALLOWLIST_BYPASS: "${IP_ALLOWLIST_BYPASS:-0}"
+      EMBEDDED_ZEROTIER: "1"
+      ZT_LOCAL_API_URL: "http://127.0.0.1:9993"
+      ZT_LOCAL_TOKEN_PATH: "/var/lib/zerotier-one/authtoken.secret"
+    volumes:
+      - control-plane-data:/data
+
+volumes:
+  control-plane-data:
