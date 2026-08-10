@@ -20,6 +20,9 @@ interface OverviewDependencies {
   timeoutMs?: number;
 }
 
+const aggregateReadTimeoutMs = 6_000;
+const offlineProbeTimeoutMs = 3_000;
+
 function errorMessage(reason: unknown) {
   return reason instanceof Error
     ? reason.message
@@ -120,7 +123,52 @@ async function controllerSnapshot(
       error: message,
     };
   }
-  const timeoutMs = dependencies.timeoutMs ?? 18_000;
+  const timeoutMs = dependencies.timeoutMs ?? aggregateReadTimeoutMs;
+  if (controller.lastOnline === false) {
+    try {
+      const status = await withTimeout(
+        adapter.getStatus(),
+        Math.min(timeoutMs, offlineProbeTimeoutMs),
+        `${controller.name} status`,
+      );
+      dependencies.onStatus?.(controller.id, status);
+      return {
+        id: controller.id,
+        name: controller.name,
+        type: controller.type,
+        embedded: controller.embedded,
+        enabled: true,
+        health: status.online ? "degraded" : "offline",
+        address: status.address || controller.lastAddress,
+        version: status.version || controller.lastVersion,
+        platform: status.platform || controller.type,
+        checkedAt: dependencies.now?.() || Date.now(),
+        managedNodeCount,
+        networks: previous?.networks || [],
+        stale: Boolean(previous?.networks.length),
+        error: status.online ? null : controller.lastError,
+      };
+    } catch (reason) {
+      const error = errorMessage(reason);
+      dependencies.onStatus?.(controller.id, null, error);
+      return {
+        id: controller.id,
+        name: controller.name,
+        type: controller.type,
+        embedded: controller.embedded,
+        enabled: true,
+        health: "offline",
+        address: controller.lastAddress,
+        version: controller.lastVersion,
+        platform: controller.type,
+        checkedAt: controller.lastCheckedAt,
+        managedNodeCount,
+        networks: previous?.networks || [],
+        stale: Boolean(previous?.networks.length),
+        error,
+      };
+    }
+  }
   const [statusResult, networkResult] = await Promise.allSettled([
     withTimeout(adapter.getStatus(), timeoutMs, `${controller.name} status`),
     withTimeout(

@@ -101,9 +101,13 @@ describe("global controller inventory", () => {
       .get() as { payload_json: string };
     assert.equal("raw" in JSON.parse(storedNetwork.payload_json), false);
 
+    let markedOffline = false;
     const cached = await buildNetworkInventory(controllers, {
       controllerAdapterFor: () => controllerAdapter({ failNetworks: true }),
       nodeAdapterFor: () => nodeAdapter(),
+      onControllerStatus: (_id, status, error) => {
+        markedOffline = status === null && Boolean(error);
+      },
       now: () => 2000,
       timeoutMs: 100,
     });
@@ -112,6 +116,32 @@ describe("global controller inventory", () => {
     assert.equal(cached.items[0].stale, true);
     assert.equal(cached.items[0].lastSyncedAt, 1000);
     assert.match(cached.controllers[0].error || "", /unavailable/);
+    assert.equal(markedOffline, true);
+
+    let offlineAdapterCalls = 0;
+    const offline = await buildNetworkInventory(
+      [
+        {
+          ...controllers[0],
+          lastOnline: false,
+          lastError: "controller unavailable",
+        },
+      ],
+      {
+        controllerAdapterFor: () => {
+          offlineAdapterCalls += 1;
+          return controllerAdapter();
+        },
+        nodeAdapterFor: () => nodeAdapter(),
+        now: () => 3000,
+        timeoutMs: 100,
+      },
+    );
+
+    assert.equal(offlineAdapterCalls, 0);
+    assert.equal(offline.items[0].network.name, "Production");
+    assert.equal(offline.items[0].stale, true);
+    assert.match(offline.controllers[0].error || "", /unavailable/);
   });
 
   it("merges a managed endpoint with its memberships by ZeroTier identity", async () => {
@@ -148,5 +178,30 @@ describe("global controller inventory", () => {
       .prepare("SELECT payload_json FROM member_inventory WHERE member_id=?")
       .get("aabbccdd01") as { payload_json: string };
     assert.equal("raw" in JSON.parse(storedMember.payload_json), false);
+
+    let offlineNodeAdapterCalls = 0;
+    const offlineControllers = listPublicControllers().map((item) => ({
+      ...item,
+      lastOnline: false,
+      lastError: "controller unavailable",
+    }));
+    const cachedEndpoint = await buildNodeInventory(
+      offlineControllers,
+      listPublicNodes(),
+      {
+        controllerAdapterFor: () => controllerAdapter(),
+        nodeAdapterFor: () => {
+          offlineNodeAdapterCalls += 1;
+          return nodeAdapter();
+        },
+        now: () => 4000,
+        timeoutMs: 100,
+      },
+    );
+
+    assert.equal(offlineNodeAdapterCalls, 0);
+    assert.equal(cachedEndpoint.endpoints[0].stale, true);
+    assert.equal(cachedEndpoint.endpoints[0].joinedNetworks.length, 1);
+    assert.match(cachedEndpoint.endpoints[0].error || "", /unavailable/);
   });
 });

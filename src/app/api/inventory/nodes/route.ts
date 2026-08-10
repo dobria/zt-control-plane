@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { controllerAdapterFor, nodeAdapterFor } from "@/lib/adapters";
-import { listPublicControllers } from "@/lib/controller-registry";
+import {
+  listPublicControllers,
+  updateControllerStatus,
+} from "@/lib/controller-registry";
 import { buildNodeInventory } from "@/lib/inventory";
 import { listPublicNodes, updateNodeStatus } from "@/lib/node-registry";
 import { jsonError } from "@/lib/errors";
@@ -25,6 +28,7 @@ export async function GET(request: Request) {
       pending = buildNodeInventory(listPublicControllers(), listPublicNodes(), {
         controllerAdapterFor,
         nodeAdapterFor,
+        onControllerStatus: updateControllerStatus,
         onNodeStatus: updateNodeStatus,
       }).finally(() => {
         pending = null;

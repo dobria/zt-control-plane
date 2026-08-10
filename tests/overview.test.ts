@@ -192,4 +192,39 @@ describe("control-plane overview aggregation", () => {
     assert.equal(snapshot.controllers[0].networks[0].memberCount, 2);
     assert.match(snapshot.controllers[0].error || "", /status unavailable/);
   });
+
+  it("only probes status while a controller is known to be offline", async () => {
+    let statusCalls = 0;
+    let networkCalls = 0;
+    let recovered = false;
+    const offline = {
+      ...controller("recovering"),
+      lastOnline: false,
+      lastError: "previous timeout",
+    };
+    const base = adapter({ members: 2 });
+    const snapshot = await buildOverviewSnapshot([offline], [], {
+      adapterFor: () => ({
+        ...base,
+        getStatus: async () => {
+          statusCalls += 1;
+          return base.getStatus();
+        },
+        listNetworks: async () => {
+          networkCalls += 1;
+          return base.listNetworks();
+        },
+      }),
+      onStatus: (_id, status) => {
+        recovered = status?.online === true;
+      },
+      timeoutMs: 100,
+    });
+
+    assert.equal(statusCalls, 1);
+    assert.equal(networkCalls, 0);
+    assert.equal(recovered, true);
+    assert.equal(snapshot.controllers[0].health, "degraded");
+    assert.equal(snapshot.controllers[0].networks.length, 0);
+  });
 });

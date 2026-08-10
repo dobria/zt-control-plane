@@ -29,6 +29,11 @@ import type {
 export interface InventoryDependencies {
   controllerAdapterFor(controllerId: string): NetworkControllerAdapter;
   nodeAdapterFor(nodeId: string): ManagedNodeAdapter;
+  onControllerStatus?(
+    controllerId: string,
+    status: ControllerStatus | null,
+    error?: string,
+  ): void;
   onNodeStatus?(
     nodeId: string,
     status: ControllerStatus | null,
@@ -37,6 +42,8 @@ export interface InventoryDependencies {
   now?: () => number;
   timeoutMs?: number;
 }
+
+const aggregateReadTimeoutMs = 6_000;
 
 function message(reason: unknown) {
   return reason instanceof Error ? reason.message : "Provider request failed.";
@@ -122,7 +129,7 @@ export async function buildNetworkInventory(
   dependencies: InventoryDependencies,
 ): Promise<NetworkInventorySnapshot> {
   const now = dependencies.now?.() || Date.now();
-  const timeoutMs = dependencies.timeoutMs ?? 18_000;
+  const timeoutMs = dependencies.timeoutMs ?? aggregateReadTimeoutMs;
   const controllerResults = await mapLimit(
     controllers,
     5,
@@ -141,6 +148,16 @@ export async function buildNetworkInventory(
           error: "Controller is disabled.",
           syncedAt: cached[0]?.syncedAt || null,
         };
+      if (controller.lastOnline === false) {
+        const error = controller.lastError || "Controller is offline.";
+        return {
+          controller,
+          items: controllerItems(controller, cached, true, error),
+          stale: Boolean(cached.length),
+          error,
+          syncedAt: cached[0]?.syncedAt || controller.lastCheckedAt,
+        };
+      }
       try {
         const adapter = dependencies.controllerAdapterFor(controller.id);
         const networks = (
@@ -165,6 +182,7 @@ export async function buildNetworkInventory(
         };
       } catch (reason) {
         const error = message(reason);
+        dependencies.onControllerStatus?.(controller.id, null, error);
         return {
           controller,
           items: controllerItems(controller, cached, true, error),
@@ -183,7 +201,7 @@ export async function buildNetworkInventory(
       name: result.controller.name,
       type: result.controller.type,
       enabled: result.controller.enabled,
-      online: result.error ? result.controller.lastOnline : true,
+      online: !result.error,
       networkCount: result.items.length,
       stale: result.stale,
       error: result.error,
@@ -219,7 +237,27 @@ async function endpointInventory(
       stale: Boolean(cached.length),
       error: "Managed endpoint is disabled.",
     };
-  const timeoutMs = dependencies.timeoutMs ?? 18_000;
+  if (controller?.lastOnline === false)
+    return {
+      id: node.id,
+      controllerId: node.controllerId,
+      controllerName: controller?.name || null,
+      type: node.type,
+      name: node.name,
+      enabled: true,
+      online: false,
+      address: node.lastAddress,
+      version: node.lastVersion,
+      instances: [],
+      joinedNetworks: cached.map((item) => item.network),
+      lastSyncedAt: cachedAt || node.lastCheckedAt,
+      stale: true,
+      error:
+        controller.lastError ||
+        node.lastError ||
+        "The associated controller is offline.",
+    };
+  const timeoutMs = dependencies.timeoutMs ?? aggregateReadTimeoutMs;
   try {
     const adapter = dependencies.nodeAdapterFor(node.id);
     const [statusResult, networksResult, instancesResult] =
@@ -425,7 +463,7 @@ export async function buildNodeInventory(
       const syncedAt = dependencies.now?.() || Date.now();
       const members = await withTimeout(
         adapter.listMembers(item.network.id),
-        dependencies.timeoutMs ?? 18_000,
+        dependencies.timeoutMs ?? aggregateReadTimeoutMs,
         `${item.network.name} members`,
       );
       saveMemberInventory(
@@ -457,7 +495,20 @@ export async function buildNodeInventory(
       }));
     }
   });
-  const controllerById = new Map(controllers.map((item) => [item.id, item]));
+  const controllerStateById = new Map(
+    networks.controllers.map((item) => [item.id, item]),
+  );
+  const controllerById = new Map(
+    controllers.map((item) => {
+      const state = controllerStateById.get(item.id);
+      return [
+        item.id,
+        state?.error
+          ? { ...item, lastOnline: false, lastError: state.error }
+          : item,
+      ];
+    }),
+  );
   const endpoints = await mapLimit(nodes, 5, (node) =>
     endpointInventory(
       node,
