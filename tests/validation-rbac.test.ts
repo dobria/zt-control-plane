@@ -125,6 +125,8 @@ describe("input validation", () => {
         disabled: false,
         ignoredReadOnlyField: "discarded",
         dns: { domain: "lab.example", servers: ["10.0.0.53"] },
+        routes: [{ target: "10.80.0.0/16", via: "10.0.0.10" }],
+        remoteTraceLevel: 0,
       }),
       {
         name: "Lab",
@@ -132,6 +134,8 @@ describe("input validation", () => {
         private: true,
         disabled: false,
         dns: { domain: "lab.example", servers: ["10.0.0.53"] },
+        routes: [{ target: "10.80.0.0/16", via: "10.0.0.10" }],
+        remoteTraceLevel: 0,
       },
     );
     assert.deepEqual(
@@ -174,6 +178,10 @@ describe("input validation", () => {
     assert.throws(
       () => networkPayload({ enableBroadcast: "yes" }),
       ValidationError,
+    );
+    assert.throws(
+      () => networkPayload({ remoteTraceLevel: "0" }),
+      /Remote trace level must be a number/,
     );
     assert.throws(
       () => clientNetworkPayload({ allowManaged: 1 }),

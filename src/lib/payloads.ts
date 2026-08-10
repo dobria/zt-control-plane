@@ -254,10 +254,17 @@ export function networkPayload(body: Record<string, unknown>) {
   for (const key of [
     "authorizationEndpoint",
     "clientId",
-    "remoteTraceLevel",
     "remoteTraceTarget",
   ] as const)
     if (body[key] !== undefined) result[key] = optionalText(body[key], 2048);
+  const remoteTraceLevel = optionalNumber(
+    body.remoteTraceLevel,
+    "Remote trace level",
+    0,
+    3,
+  );
+  if (remoteTraceLevel !== undefined)
+    result.remoteTraceLevel = remoteTraceLevel;
   return result;
 }
 
