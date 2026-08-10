@@ -3445,18 +3445,28 @@ html[data-reduced-motion="true"] *::after {
   .mobile-menu svg {
     width: 18px;
   }
+  .top-navigation.menu-open {
+    z-index: 120;
+  }
   .primary-nav.open {
     position: fixed;
     inset: 0 0 0 auto;
     z-index: 110;
     width: min(360px, 88vw);
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 4px;
-    padding: 22px;
+    padding:
+      max(22px, env(safe-area-inset-top))
+      max(22px, env(safe-area-inset-right))
+      max(22px, env(safe-area-inset-bottom)) 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border-left: 1px solid var(--line-bright);
     background: var(--card);
+    box-shadow: -24px 0 56px rgba(0, 0, 0, 0.42);
   }
   .primary-nav.open .nav-group {
     width: 100%;
