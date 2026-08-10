@@ -24,7 +24,7 @@ import type { ControllerType, PublicController } from "@/lib/types";
 
 interface FormState {
   id: string;
-  type: Exclude<ControllerType, "embedded">;
+  type: ControllerType;
   name: string;
   baseUrl: string;
   apiToken: string;
@@ -132,7 +132,12 @@ export function ControllersPage() {
       setMessage(
         result.warning ||
           (form.id
-            ? "Controller connection updated."
+            ? controllers.find((controller) => controller.id === form.id)
+                ?.enabled !== form.enabled
+              ? form.enabled
+                ? "Controller connection resumed."
+                : "Controller connection paused."
+              : "Controller connection updated."
             : "Controller connection added."),
       );
     } catch (caught) {
@@ -320,7 +325,7 @@ export function ControllersPage() {
                     className={`status-pill ${!controller.enabled || controller.lastOnline === false ? "offline" : controller.lastOnline === null ? "neutral" : ""}`}
                   >
                     {!controller.enabled
-                      ? "Disabled"
+                      ? "Paused"
                       : controller.lastOnline === false
                         ? "Offline"
                         : controller.lastOnline === null
@@ -392,20 +397,18 @@ export function ControllersPage() {
                 <>
                   <button
                     className="button small"
-                    disabled={busy === controller.id}
+                    disabled={!controller.enabled || busy === controller.id}
                     onClick={() => void test(controller)}
                   >
                     <RefreshCw /> Test
                   </button>
-                  {!controller.embedded && (
-                    <button
-                      className="icon-button"
-                      onClick={() => edit(controller)}
-                      aria-label={`Edit ${controller.name}`}
-                    >
-                      <Edit3 />
-                    </button>
-                  )}
+                  <button
+                    className="icon-button"
+                    onClick={() => edit(controller)}
+                    aria-label={`Edit ${controller.name}`}
+                  >
+                    <Edit3 />
+                  </button>
                   {!controller.embedded && (
                     <button
                       className="icon-button danger-icon"
@@ -457,7 +460,9 @@ export function ControllersPage() {
                   {form.id ? "Edit connection" : "Add controller"}
                 </h2>
                 <p>
-                  Credentials are encrypted before they are stored in SQLite.
+                  {form.type === "embedded"
+                    ? "Control whether the embedded controller is available to the control plane."
+                    : "Credentials are encrypted before they are stored in SQLite."}
                 </p>
               </div>
               <button
@@ -501,53 +506,57 @@ export function ControllersPage() {
                   </select>
                 </label>
               )}
-              <label className="field full">
-                <span>Display name</span>
-                <input
-                  className="input"
-                  value={form.name}
-                  onChange={(event) =>
-                    setForm({ ...form, name: event.target.value })
-                  }
-                  required
-                  autoFocus
-                />
-              </label>
-              <label className="field full">
-                <span>
-                  {form.type === "mikrotik"
-                    ? "RouterOS URL"
-                    : form.type.startsWith("central_")
-                      ? "ZeroTier Central API URL"
-                      : "ZeroTier Service API URL"}
-                </span>
-                <input
-                  className="input mono"
-                  type="url"
-                  value={form.baseUrl}
-                  onChange={(event) =>
-                    setForm({ ...form, baseUrl: event.target.value })
-                  }
-                  placeholder={
-                    form.type === "mikrotik"
-                      ? "https://10.147.20.10"
-                      : form.type.startsWith("central_")
-                        ? undefined
-                        : "http://10.147.20.5:9993"
-                  }
-                  required
-                />
-                <small>
-                  {form.type === "mikrotik"
-                    ? "Use a hostname or IP address, for example https://10.147.20.10. /rest is added automatically."
-                    : form.type === "central_v2"
-                      ? "Default: https://central.zerotier.com"
-                      : form.type === "central_v1"
-                        ? "Default: https://api.zerotier.com/api/v1"
-                        : "Use a hostname or IP address, for example http://10.147.20.5:9993."}
-                </small>
-              </label>
-              {form.type === "central_v2" && (
+              {form.type !== "embedded" && (
+                <>
+                  <label className="field full">
+                    <span>Display name</span>
+                    <input
+                      className="input"
+                      value={form.name}
+                      onChange={(event) =>
+                        setForm({ ...form, name: event.target.value })
+                      }
+                      required
+                      autoFocus
+                    />
+                  </label>
+                  <label className="field full">
+                    <span>
+                      {form.type === "mikrotik"
+                        ? "RouterOS URL"
+                        : form.type.startsWith("central_")
+                          ? "ZeroTier Central API URL"
+                          : "ZeroTier Service API URL"}
+                    </span>
+                    <input
+                      className="input mono"
+                      type="url"
+                      value={form.baseUrl}
+                      onChange={(event) =>
+                        setForm({ ...form, baseUrl: event.target.value })
+                      }
+                      placeholder={
+                        form.type === "mikrotik"
+                          ? "https://10.147.20.10"
+                          : form.type.startsWith("central_")
+                            ? undefined
+                            : "http://10.147.20.5:9993"
+                      }
+                      required
+                    />
+                    <small>
+                      {form.type === "mikrotik"
+                        ? "Use a hostname or IP address, for example https://10.147.20.10. /rest is added automatically."
+                        : form.type === "central_v2"
+                          ? "Default: https://central.zerotier.com"
+                          : form.type === "central_v1"
+                            ? "Default: https://api.zerotier.com/api/v1"
+                            : "Use a hostname or IP address, for example http://10.147.20.5:9993."}
+                    </small>
+                  </label>
+                </>
+              )}
+              {form.type !== "embedded" && form.type === "central_v2" && (
                 <>
                   <label className="field">
                     <span>Organization ID</span>
@@ -573,67 +582,68 @@ export function ControllersPage() {
                   </label>
                 </>
               )}
-              {form.type === "mikrotik" ? (
-                <>
-                  <label className="field">
-                    <span>RouterOS username</span>
+              {form.type !== "embedded" &&
+                (form.type === "mikrotik" ? (
+                  <>
+                    <label className="field">
+                      <span>RouterOS username</span>
+                      <input
+                        className="input"
+                        value={form.username}
+                        onChange={(event) =>
+                          setForm({ ...form, username: event.target.value })
+                        }
+                        required={!form.id}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Password {form.id && "(optional)"}</span>
+                      <input
+                        className="input"
+                        type="password"
+                        value={form.password}
+                        onChange={(event) =>
+                          setForm({ ...form, password: event.target.value })
+                        }
+                        required={!form.id}
+                        autoComplete="new-password"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <label className="field full">
+                    <span>
+                      {form.type.startsWith("central_")
+                        ? "Central API token"
+                        : "Local API token"}{" "}
+                      {form.id && "(optional)"}
+                    </span>
                     <input
-                      className="input"
-                      value={form.username}
-                      onChange={(event) =>
-                        setForm({ ...form, username: event.target.value })
-                      }
-                      required={!form.id}
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Password {form.id && "(optional)"}</span>
-                    <input
-                      className="input"
+                      className="input mono"
                       type="password"
-                      value={form.password}
+                      value={form.apiToken}
                       onChange={(event) =>
-                        setForm({ ...form, password: event.target.value })
+                        setForm({ ...form, apiToken: event.target.value })
                       }
                       required={!form.id}
                       autoComplete="new-password"
                     />
+                    <small>
+                      {form.type === "central_v2"
+                        ? "Use a New Central service-account token."
+                        : form.type === "central_v1"
+                          ? "Use a Legacy Central personal API token."
+                          : "Read from the remote controller's authtoken.secret file."}
+                    </small>
                   </label>
-                </>
-              ) : (
-                <label className="field full">
-                  <span>
-                    {form.type.startsWith("central_")
-                      ? "Central API token"
-                      : "Local API token"}{" "}
-                    {form.id && "(optional)"}
-                  </span>
-                  <input
-                    className="input mono"
-                    type="password"
-                    value={form.apiToken}
-                    onChange={(event) =>
-                      setForm({ ...form, apiToken: event.target.value })
-                    }
-                    required={!form.id}
-                    autoComplete="new-password"
-                  />
-                  <small>
-                    {form.type === "central_v2"
-                      ? "Use a New Central service-account token."
-                      : form.type === "central_v1"
-                        ? "Use a Legacy Central personal API token."
-                        : "Read from the remote controller's authtoken.secret file."}
-                  </small>
-                </label>
-              )}
+                ))}
               <div className="field full switch-stack">
                 <div className="switch-field">
                   <div>
-                    <strong>Enabled</strong>
+                    <strong>Connection active</strong>
                     <small>
-                      Disabled connections remain registered but cannot be
-                      selected.
+                      Paused connections remain registered. No synchronization,
+                      diagnostics or management requests are sent.
                     </small>
                   </div>
                   <label className="switch">
@@ -647,24 +657,26 @@ export function ControllersPage() {
                     <span />
                   </label>
                 </div>
-                <div className="switch-field">
-                  <div>
-                    <strong>Verify TLS certificate</strong>
-                    <small>
-                      Keep enabled outside isolated development environments.
-                    </small>
+                {form.type !== "embedded" && (
+                  <div className="switch-field">
+                    <div>
+                      <strong>Verify TLS certificate</strong>
+                      <small>
+                        Keep enabled outside isolated development environments.
+                      </small>
+                    </div>
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        checked={form.tlsVerify}
+                        onChange={(event) =>
+                          setForm({ ...form, tlsVerify: event.target.checked })
+                        }
+                      />
+                      <span />
+                    </label>
                   </div>
-                  <label className="switch">
-                    <input
-                      type="checkbox"
-                      checked={form.tlsVerify}
-                      onChange={(event) =>
-                        setForm({ ...form, tlsVerify: event.target.checked })
-                      }
-                    />
-                    <span />
-                  </label>
-                </div>
+                )}
               </div>
             </div>
             <div className="modal-footer">

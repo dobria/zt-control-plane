@@ -142,10 +142,10 @@ export async function buildNetworkInventory(
             controller,
             cached,
             Boolean(cached.length),
-            "Controller is disabled.",
+            "Controller connection is paused.",
           ),
           stale: Boolean(cached.length),
-          error: "Controller is disabled.",
+          error: "Controller connection is paused.",
           syncedAt: cached[0]?.syncedAt || null,
         };
       if (controller.lastOnline === false) {

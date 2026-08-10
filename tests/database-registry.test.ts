@@ -24,6 +24,7 @@ import {
   getActiveControllerId,
   getController,
   listPublicControllers,
+  setControllerEnabled,
 } from "@/lib/controller-registry";
 import { resetSecretCacheForTests } from "@/lib/secrets";
 import { writeAudit } from "@/lib/audit";
@@ -183,6 +184,72 @@ describe("SQLite persistence and controller registry", () => {
 
     assert.equal(getController("embedded-local")?.embedded, true);
     assert.equal(getNode("embedded-local-node")?.local, true);
+  });
+
+  it("pauses and resumes a controller without removing its registration", () => {
+    const created = createController({
+      type: "zerotier",
+      name: "Pausable controller",
+      baseUrl: "http://pausable.internal:9993",
+      credentials: { apiToken: "retained-token" },
+      enabled: true,
+      tlsVerify: false,
+    });
+    const userId = randomUUID();
+    const now = Date.now();
+    db()
+      .prepare(
+        "INSERT INTO users (id,email,display_name,password_hash,role,disabled,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+      )
+      .run(
+        userId,
+        `${userId}@example.com`,
+        "Pause test",
+        "test",
+        "viewer",
+        0,
+        now,
+        now,
+      );
+    db()
+      .prepare(
+        "INSERT INTO user_preferences (user_id,active_controller_id,active_node_id) VALUES (?,?,?)",
+      )
+      .run(userId, created.id, `node-${created.id}`);
+
+    setControllerEnabled(created.id, false);
+
+    assert.equal(getController(created.id)?.enabled, false);
+    assert.equal(getNode(`node-${created.id}`)?.enabled, false);
+    assert.deepEqual(credentialsFor(getController(created.id)!), {
+      apiToken: "retained-token",
+    });
+    const pausedPreferences = queryOne<{
+      active_controller_id: string | null;
+      active_node_id: string | null;
+    }>(
+      "SELECT active_controller_id,active_node_id FROM user_preferences WHERE user_id=?",
+      userId,
+    );
+    assert.notEqual(pausedPreferences?.active_controller_id, created.id);
+    assert.equal(pausedPreferences?.active_node_id, null);
+
+    setControllerEnabled(created.id, true);
+
+    assert.equal(getController(created.id)?.enabled, true);
+    assert.equal(getNode(`node-${created.id}`)?.enabled, true);
+  });
+
+  it("can pause the embedded controller and its local node", () => {
+    try {
+      setControllerEnabled("embedded-local", false);
+      assert.equal(getController("embedded-local")?.enabled, false);
+      assert.equal(getNode("embedded-local-node")?.enabled, false);
+    } finally {
+      setControllerEnabled("embedded-local", true);
+    }
+    assert.equal(getController("embedded-local")?.enabled, true);
+    assert.equal(getNode("embedded-local-node")?.enabled, true);
   });
 
   it("can explicitly clear a saved visual flow-policy template", () => {

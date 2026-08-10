@@ -25,6 +25,10 @@ function providerName(controller: OverviewControllerSnapshot) {
   return "Remote ZeroTier One";
 }
 
+function healthLabel(health: string) {
+  return health === "disabled" ? "paused" : health;
+}
+
 function ControllerIcon({
   controller,
 }: {
@@ -154,7 +158,7 @@ export function ControllerFleet({
             </div>
           </dl>
           <span className={`status-pill ${selected.health}`}>
-            {selected.health}
+            {healthLabel(selected.health)}
           </span>
           <div className="selection-actions">
             <Link
@@ -272,7 +276,7 @@ export function ControllerTopology({
           <p>Networks orbit the controller · members appear as totals</p>
         </div>
         <span className={`status-pill ${controller.health}`}>
-          {controller.health}
+          {healthLabel(controller.health)}
         </span>
       </div>
       <div
@@ -397,7 +401,7 @@ export function ControllerTopology({
           </span>
         ) : (
           <span className={`status-pill ${controller.health}`}>
-            {controller.health}
+            {healthLabel(controller.health)}
           </span>
         )}
         <div className="selection-actions">

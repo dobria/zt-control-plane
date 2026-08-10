@@ -166,35 +166,95 @@ export function updateController(
     ? encryptJson(input.credentials)
     : current.encryptedCredentials;
   const database = db();
-  database
-    .prepare(
-      `UPDATE controllers SET name=?,base_url=?,encrypted_credentials=?,configuration_json=?,enabled=?,tls_verify=?,updated_at=? WHERE id=?`,
-    )
-    .run(
-      input.name,
-      input.baseUrl,
-      encrypted,
-      JSON.stringify(input.configuration ?? current.configuration),
-      input.enabled ? 1 : 0,
-      input.tlsVerify ? 1 : 0,
-      Date.now(),
-      id,
-    );
-  if (current.type === "zerotier" || current.type === "mikrotik")
+  const now = Date.now();
+  database.exec("BEGIN IMMEDIATE");
+  try {
     database
       .prepare(
-        `UPDATE managed_nodes SET name=?,base_url=?,encrypted_credentials=?,enabled=?,tls_verify=?,updated_at=? WHERE id=? AND controller_id=?`,
+        `UPDATE controllers SET name=?,base_url=?,encrypted_credentials=?,configuration_json=?,enabled=?,tls_verify=?,updated_at=? WHERE id=?`,
       )
       .run(
-        `${input.name} node`,
+        input.name,
         input.baseUrl,
         encrypted,
+        JSON.stringify(input.configuration ?? current.configuration),
         input.enabled ? 1 : 0,
         input.tlsVerify ? 1 : 0,
-        Date.now(),
-        `node-${id}`,
+        now,
         id,
       );
+    if (current.type === "zerotier" || current.type === "mikrotik")
+      database
+        .prepare(
+          `UPDATE managed_nodes SET name=?,base_url=?,encrypted_credentials=?,enabled=?,tls_verify=?,updated_at=? WHERE id=? AND controller_id=?`,
+        )
+        .run(
+          `${input.name} node`,
+          input.baseUrl,
+          encrypted,
+          input.enabled ? 1 : 0,
+          input.tlsVerify ? 1 : 0,
+          now,
+          `node-${id}`,
+          id,
+        );
+    if (current.enabled && !input.enabled)
+      movePreferencesFromPausedController(database, current);
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+  return getController(id)!;
+}
+
+function movePreferencesFromPausedController(
+  database: ReturnType<typeof db>,
+  controller: ControllerRecord,
+) {
+  const fallback =
+    listControllers().find(
+      (candidate) => candidate.id !== controller.id && candidate.enabled,
+    )?.id || null;
+  const linkedNodeId = controller.embedded
+    ? "embedded-local-node"
+    : `node-${controller.id}`;
+  database
+    .prepare(
+      "UPDATE user_preferences SET active_controller_id=? WHERE active_controller_id=?",
+    )
+    .run(fallback, controller.id);
+  database
+    .prepare(
+      "UPDATE user_preferences SET active_node_id=NULL WHERE active_node_id=?",
+    )
+    .run(linkedNodeId);
+}
+
+export function setControllerEnabled(id: string, enabled: boolean) {
+  const current = getController(id);
+  if (!current)
+    throw new AppError("Controller not found.", 404, "CONTROLLER_NOT_FOUND");
+  if (current.enabled === enabled) return current;
+  const database = db();
+  const now = Date.now();
+  const linkedNodeId = current.embedded ? "embedded-local-node" : `node-${id}`;
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    database
+      .prepare("UPDATE controllers SET enabled=?,updated_at=? WHERE id=?")
+      .run(enabled ? 1 : 0, now, id);
+    database
+      .prepare(
+        "UPDATE managed_nodes SET enabled=?,updated_at=? WHERE id=? AND controller_id=?",
+      )
+      .run(enabled ? 1 : 0, now, linkedNodeId, id);
+    if (!enabled) movePreferencesFromPausedController(database, current);
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
   return getController(id)!;
 }
 
