@@ -24,20 +24,6 @@ For a self-contained lab, there is also an optional embedded-controller build.
 It is deliberately separate from the open-source image because it uses ZeroTier
 code covered by different upstream terms.
 
-## Watch the interface tour
-
-<p align="center">
-  <a href="https://github.com/dobria/zt-control-plane/releases/download/demo-v1/zt-control-plane-demo.mp4">
-    <img src="docs/media/demo-cover.png" alt="Watch the ZT Control Plane interface tour">
-  </a>
-</p>
-
-<p align="center">
-  A one-minute tour of controller, network, node, diagnostics, security and
-  audit workflows.<br>
-  <sub>The recording uses a private demo environment with entirely fabricated data.</sub>
-</p>
-
 ## See it at a glance
 
 <p align="center">
