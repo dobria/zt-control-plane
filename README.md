@@ -24,6 +24,54 @@ For a self-contained lab, there is also an optional embedded-controller build.
 It is deliberately separate from the open-source image because it uses ZeroTier
 code covered by different upstream terms.
 
+## See it at a glance
+
+<p align="center">
+  <a href="docs/INTERFACE_GALLERY.md">
+    <img src="screenshots/overview.png" alt="ZT Control Plane overview showing controller health, topology, activity and network inventory">
+  </a>
+</p>
+
+<p align="center">
+  One workspace for controller health, networks, members and managed nodes.<br>
+  <sub>Every controller, address, account and event shown here is fabricated demonstration data.</sub>
+</p>
+
+<table>
+  <tr>
+    <td width="50%">
+      <a href="screenshots/controllers.png">
+        <img src="screenshots/controllers.png" alt="Controller registry with multiple supported provider types">
+      </a>
+      <br><sub><strong>Controller registry</strong> — keep provider context visible and switch safely between endpoints.</sub>
+    </td>
+    <td width="50%">
+      <a href="screenshots/network-inventory.png">
+        <img src="screenshots/network-inventory.png" alt="Cross-controller network inventory">
+      </a>
+      <br><sub><strong>Network inventory</strong> — search every registered controller without losing ownership context.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="screenshots/node-routeros.png">
+        <img src="screenshots/node-routeros.png" alt="RouterOS node management with multiple ZeroTier instances">
+      </a>
+      <br><sub><strong>RouterOS instances</strong> — distinguish controller, client, peer and runtime roles.</sub>
+    </td>
+    <td width="50%">
+      <a href="screenshots/network-members.png">
+        <img src="screenshots/network-members.png" alt="Managed network members and authorization status">
+      </a>
+      <br><sub><strong>Member management</strong> — inspect authorization and managed addresses in the selected network.</sub>
+    </td>
+  </tr>
+</table>
+
+Explore the [complete interface gallery](docs/INTERFACE_GALLERY.md) for node
+inventory, diagnostics, access control, roles, audit history and profile
+management.
+
 ## What you can do
 
 - Multi-controller registry with connection testing, encrypted credentials,
