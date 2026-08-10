@@ -80,7 +80,9 @@ function Frame({ children }: { children: ReactNode }) {
   }
   return (
     <div className="app-frame">
-      <header className="top-navigation">
+      <header
+        className={`top-navigation ${menuOpen ? "menu-open" : ""}`}
+      >
         <Link href="/" className="brand">
           <span className="brand-mark">
             <Boxes />
@@ -93,6 +95,7 @@ function Frame({ children }: { children: ReactNode }) {
           </span>
         </Link>
         <nav
+          id="primary-navigation"
           className={`primary-nav ${menuOpen ? "open" : ""}`}
           aria-label="Primary navigation"
         >
@@ -153,6 +156,8 @@ function Frame({ children }: { children: ReactNode }) {
             className="mobile-menu"
             onClick={() => setMenuOpen(true)}
             aria-label="Open navigation"
+            aria-controls="primary-navigation"
+            aria-expanded={menuOpen}
           >
             <Menu />
           </button>
