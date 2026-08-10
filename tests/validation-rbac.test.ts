@@ -156,6 +156,18 @@ describe("input validation", () => {
         ipAssignments: ["10.20.30.40"],
       },
     );
+    assert.deepEqual(
+      memberPayload({ remoteTraceTarget: "                    " }),
+      { remoteTraceTarget: "" },
+    );
+    assert.deepEqual(
+      memberPayload({ remoteTraceTarget: "  ABCDEF0123  " }),
+      { remoteTraceTarget: "abcdef0123" },
+    );
+    assert.throws(
+      () => memberPayload({ remoteTraceTarget: "not-a-node" }),
+      /10 hexadecimal characters/,
+    );
     assert.deepEqual(clientNetworkPayload({ allowDNS: false }), {
       allowDNS: false,
     });

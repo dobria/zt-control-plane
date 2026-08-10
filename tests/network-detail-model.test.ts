@@ -36,6 +36,24 @@ describe("network editor model", () => {
     assert.equal(draft.tagsJson, "[\n  [\n    7,\n    9\n  ]\n]");
   });
 
+  it("removes API padding from a member remote trace target", () => {
+    const emptyTarget = memberDraftFrom({
+      id: "abcdef0123",
+      name: "",
+      authorized: true,
+      remoteTraceTarget: "                    ",
+    });
+    const populatedTarget = memberDraftFrom({
+      id: "abcdef0123",
+      name: "",
+      authorized: true,
+      remoteTraceTarget: "  ABCDEF0123  ",
+    });
+
+    assert.equal(emptyTarget.remoteTraceTarget, "");
+    assert.equal(populatedTarget.remoteTraceTarget, "abcdef0123");
+  });
+
   it("generates an explicit accept/drop rule set for restricted traffic", () => {
     const source = generateFlowSource({
       layer2Only: true,

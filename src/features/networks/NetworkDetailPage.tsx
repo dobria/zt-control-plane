@@ -34,6 +34,7 @@ import {
   generateFlowSource,
   generatedSubnet,
   memberDraftFrom,
+  normalizeRemoteTraceTarget,
   ruleStarters,
   serviceOptions,
   type FlowPolicy,
@@ -879,7 +880,9 @@ export function NetworkDetailPage({
                       onChange={(event) =>
                         setDraft({
                           ...draft,
-                          remoteTraceTarget: event.target.value.toLowerCase(),
+                          remoteTraceTarget: normalizeRemoteTraceTarget(
+                            event.target.value,
+                          ),
                         })
                       }
                     />

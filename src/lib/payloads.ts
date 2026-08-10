@@ -65,6 +65,19 @@ function ipAddress(value: unknown, field: string) {
   return result;
 }
 
+function traceTarget(value: unknown) {
+  if (value === null || value === undefined || value === "") return "";
+  if (typeof value !== "string")
+    throw new ValidationError("Remote trace target must be text.");
+  const result = value.trim().toLowerCase();
+  if (!result) return "";
+  if (!/^[0-9a-f]{10}$/.test(result))
+    throw new ValidationError(
+      "Remote trace target must contain 10 hexadecimal characters.",
+    );
+  return result;
+}
+
 function cidr(value: unknown, field: string) {
   const result = optionalText(value, 160);
   const [address, prefix, ...extra] = result.split("/");
@@ -251,12 +264,10 @@ export function networkPayload(body: Record<string, unknown>) {
   if (body.capabilities !== undefined)
     result.capabilities = compiledCapabilities(body.capabilities);
   if (body.tags !== undefined) result.tags = compiledTags(body.tags);
-  for (const key of [
-    "authorizationEndpoint",
-    "clientId",
-    "remoteTraceTarget",
-  ] as const)
+  for (const key of ["authorizationEndpoint", "clientId"] as const)
     if (body[key] !== undefined) result[key] = optionalText(body[key], 2048);
+  if (body.remoteTraceTarget !== undefined)
+    result.remoteTraceTarget = traceTarget(body.remoteTraceTarget);
   const remoteTraceLevel = optionalNumber(
     body.remoteTraceLevel,
     "Remote trace level",
@@ -305,7 +316,7 @@ export function memberPayload(body: Record<string, unknown>) {
   );
   if (traceLevel !== undefined) result.remoteTraceLevel = traceLevel;
   if (body.remoteTraceTarget !== undefined)
-    result.remoteTraceTarget = optionalText(body.remoteTraceTarget, 80);
+    result.remoteTraceTarget = traceTarget(body.remoteTraceTarget);
   return result;
 }
 

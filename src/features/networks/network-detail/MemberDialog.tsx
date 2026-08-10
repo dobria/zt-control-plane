@@ -6,6 +6,7 @@ import { ControllerTarget } from "@/shared/providers/ControllerContext";
 import { useDialog } from "@/shared/hooks/useDialog";
 import {
   dateTimeInput,
+  normalizeRemoteTraceTarget,
   type MemberDraft,
 } from "@/features/networks/network-detail/model";
 import type {
@@ -198,7 +199,9 @@ export function MemberDialog({
                     disabled={!canWrite}
                     onChange={(event) =>
                       update({
-                        remoteTraceTarget: event.target.value.toLowerCase(),
+                        remoteTraceTarget: normalizeRemoteTraceTarget(
+                          event.target.value,
+                        ),
                       })
                     }
                   />

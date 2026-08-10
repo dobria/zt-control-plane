@@ -79,11 +79,16 @@ export function emptyMember(): MemberDraft {
   };
 }
 
+export function normalizeRemoteTraceTarget(value: unknown) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
 export function memberDraftFrom(member: NetworkMember): MemberDraft {
   return {
     ...emptyMember(),
     ...member,
     description: String(member.description || ""),
+    remoteTraceTarget: normalizeRemoteTraceTarget(member.remoteTraceTarget),
     capabilitiesJson: JSON.stringify(member.capabilities || [], null, 2),
     tagsJson: JSON.stringify(member.tags || [], null, 2),
   };
