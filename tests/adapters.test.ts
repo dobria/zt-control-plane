@@ -173,6 +173,8 @@ describe("ZeroTier One Service API adapter", () => {
     const calls: string[] = [];
     const fetcher: Fetcher = async (url, init = {}) => {
       calls.push(`${init.method || "GET"} ${String(url)}`);
+      if ((init.method || "GET") === "GET" && String(url).endsWith("/network"))
+        return json([{ id: "a09acf0234abcdef", status: "OK" }]);
       return json({
         id: String(url).includes("/member/")
           ? "abcdef0123"
@@ -294,8 +296,11 @@ describe("ZeroTier One Service API adapter", () => {
   it("sends every supported client-side network policy", async () => {
     let submitted: Record<string, unknown> = {};
     const fetcher: Fetcher = async (_url, init = {}) => {
-      submitted = JSON.parse(String(init.body));
-      return json({ id: "a09acf0234abcdef", status: "OK" });
+      if ((init.method || "GET") === "POST") {
+        submitted = JSON.parse(String(init.body));
+        return json({});
+      }
+      return json([{ id: "a09acf0234abcdef", status: "OK" }]);
     };
     const adapter = new ZeroTierAdapter(
       record("zerotier"),
@@ -314,6 +319,24 @@ describe("ZeroTier One Service API adapter", () => {
       allowGlobal: true,
       allowDNS: true,
     });
+  });
+
+  it("rejects an acknowledged join that never appears on the node", async () => {
+    const fetcher: Fetcher = async (_url, init = {}) =>
+      (init.method || "GET") === "POST" ? json({}) : json([]);
+    const adapter = new ZeroTierAdapter(
+      record("zerotier"),
+      { apiToken: "token" },
+      fetcher,
+    );
+    await assert.rejects(
+      () => adapter.joinClientNetwork("a09acf0234abcdef"),
+      (error: unknown) =>
+        error instanceof AdapterError &&
+        error.status === 502 &&
+        /dev\/net\/tun/.test(error.message) &&
+        /NET_ADMIN/.test(error.message),
+    );
   });
 });
 
