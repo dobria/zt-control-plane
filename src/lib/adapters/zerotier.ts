@@ -69,6 +69,9 @@ function pick(input: Record<string, unknown>, keys: string[]) {
       .map((key) => [key, input[key]]),
   );
 }
+function normalizeTraceTarget(value: unknown) {
+  return typeof value === "string" ? value.trim().toLowerCase() : value;
+}
 function normalizeNetwork(
   input: Record<string, unknown>,
   fallbackId = "",
@@ -79,6 +82,7 @@ function normalizeNetwork(
     id,
     name: String(input.name || "Unnamed network"),
     private: input.private !== false,
+    remoteTraceTarget: normalizeTraceTarget(input.remoteTraceTarget),
     raw: input,
   } as ManagedNetwork;
 }
@@ -97,6 +101,7 @@ function normalizeMember(
     name: String(input.name || ""),
     authorized: Boolean(input.authorized),
     version,
+    remoteTraceTarget: normalizeTraceTarget(input.remoteTraceTarget),
     raw: input,
   } as NetworkMember;
 }

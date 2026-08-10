@@ -180,6 +180,9 @@ describe("ZeroTier One Service API adapter", () => {
           ? "abcdef0123"
           : "a09acf0234abcdef",
         authorized: true,
+        remoteTraceTarget: String(url).includes("/member/")
+          ? "                    "
+          : undefined,
         status: "OK",
       });
     };
@@ -188,9 +191,12 @@ describe("ZeroTier One Service API adapter", () => {
       { apiToken: "token" },
       fetcher,
     );
-    await adapter.updateMember("a09acf0234abcdef", "abcdef0123", {
-      authorized: true,
-    });
+    const updatedMember = await adapter.updateMember(
+      "a09acf0234abcdef",
+      "abcdef0123",
+      { authorized: true },
+    );
+    assert.equal(updatedMember.remoteTraceTarget, "");
     await adapter.deleteMember("a09acf0234abcdef", "abcdef0123");
     await adapter.joinClientNetwork("a09acf0234abcdef", {
       allowDefault: true,
