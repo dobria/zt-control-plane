@@ -112,6 +112,15 @@ The Compose file pins `ghcr.io/dobria/zt-control-plane:0.1.1`. Review each new
 release before changing that version. The image is built from the matching Git
 tag and published with SBOM and provenance attestations.
 
+The same standard release image is also available from Docker Hub:
+
+```sh
+docker pull dobria/zt-control-plane:0.1.1
+```
+
+Use a complete version tag for repeatable deployments. `latest` is provided as
+a convenience and advances with each stable release.
+
 To build the standard image from source instead:
 
 ```sh
@@ -132,7 +141,7 @@ ZeroTier UDP port.
 
 Published packages intentionally contain only this standard runtime. The
 optional embedded-controller target is never pushed to GitHub Container
-Registry.
+Registry or Docker Hub.
 
 When you are ready to put it behind HTTPS, the [deployment guide](docs/DEPLOYMENT.md)
 covers reverse proxies, persistent storage, production settings, and an optional

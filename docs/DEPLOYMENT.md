@@ -11,8 +11,15 @@ need the optional embedded controller.
 ## The recommended setup
 
 The default `runtime` image contains the Apache-2.0 web application and its
-open-source runtime dependencies. Versioned standard images are published at
-`ghcr.io/dobria/zt-control-plane` from immutable release tags.
+open-source runtime dependencies. Versioned standard images are published from
+immutable release tags to both registries:
+
+- `ghcr.io/dobria/zt-control-plane`
+- `docker.io/dobria/zt-control-plane`
+
+Both names refer to the same release build. The supplied Compose file uses
+GHCR by default. Set `CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.1` if you
+prefer Docker Hub.
 It listens on TCP 3000, stores state below `/data/app`, and requires no TUN
 device or elevated network capabilities. The supplied Compose service also
 runs it as an unprivileged user with a read-only root filesystem, no Linux
