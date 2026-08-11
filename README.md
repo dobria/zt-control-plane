@@ -108,18 +108,26 @@ cp .env.example .env
 docker compose -f compose.release.yaml up -d
 ```
 
-The Compose file pins `ghcr.io/dobria/zt-control-plane:0.1.1`. Review each new
-release before changing that version. The image is built from the matching Git
-tag and published with SBOM and provenance attestations.
-
-The same standard release image is also available from Docker Hub:
+The Compose file defaults to GitHub Container Registry and pins the complete
+`0.1.1` version. To deploy the same release from Docker Hub instead:
 
 ```sh
+CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.1 \
+  docker compose -f compose.release.yaml up -d
+```
+
+Both registry names receive the same release build:
+
+```sh
+docker pull ghcr.io/dobria/zt-control-plane:0.1.1
 docker pull dobria/zt-control-plane:0.1.1
 ```
 
-Use a complete version tag for repeatable deployments. `latest` is provided as
-a convenience and advances with each stable release.
+Check [GitHub Releases](https://github.com/dobria/zt-control-plane/releases) for
+the current stable version. Use a complete version tag or its published digest
+for repeatable deployments. `latest` is provided only as a convenience. The
+release workflow verifies that the complete, minor, and `latest` tags in both
+registries resolve to the same digest before creating a GitHub Release.
 
 To build the standard image from source instead:
 
