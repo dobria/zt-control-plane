@@ -38,10 +38,31 @@ trust.
 ## Release
 
 - [ ] Document breaking changes and database compatibility.
+- [ ] Keep `package.json`, `package-lock.json`, `CHANGELOG.md`, the release notes,
+      and the `vMAJOR.MINOR.PATCH` tag on the same version.
 - [ ] Tag immutable versions; do not publish only `latest`.
 - [ ] Publish source from the same commit used for any binary image.
 - [ ] Sign release artifacts and image provenance where the registry supports it.
+- [ ] Publish only the standard `runtime` target to GHCR. Never publish the
+      separately licensed `embedded-runtime` target from the release workflow.
+- [ ] Confirm the release image is public, linked to this repository, and
+      pullable without registry credentials.
 - [ ] Re-test backup and restore before announcing the release.
+
+## Versioned release flow
+
+1. Prepare a pull request that updates the package version, changelog, release
+   notes, and any version-pinned deployment examples.
+2. Merge only after CI and review pass on the exact release diff.
+3. Create a signed, annotated `vMAJOR.MINOR.PATCH` tag on the merged `main`
+   commit and push only that tag.
+4. Let `.github/workflows/release.yml` validate the version, test the source,
+   scan the standard image, publish it to GHCR, attest it, and create the GitHub
+   Release.
+5. Verify the package digest and release notes before announcing the version.
+
+The `demo-v1` tag exists only for the interface demo media and is not an
+application release. Software versions use semantic `vMAJOR.MINOR.PATCH` tags.
 
 When every box is checked, the release should be reproducible from the same
 source commit and ready for someone new to try with confidence. The checklist

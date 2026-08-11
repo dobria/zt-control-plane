@@ -98,7 +98,25 @@ quickest way to compare them.
 Requirements: Docker Engine with Compose support. The supplied configuration
 is tested on `linux/amd64`.
 
+The recommended installation uses the versioned image published for the latest
+release. Download the release Compose file and environment template:
+
 ```sh
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/.env.example
+cp .env.example .env
+docker compose -f compose.release.yaml up -d
+```
+
+The Compose file pins `ghcr.io/dobria/zt-control-plane:0.1.0`. Review each new
+release before changing that version. The image is built from the matching Git
+tag and published with SBOM and provenance attestations.
+
+To build the standard image from source instead:
+
+```sh
+git clone https://github.com/dobria/zt-control-plane.git
+cd zt-control-plane
 cp .env.example .env
 docker compose up -d --build
 ```
@@ -111,6 +129,10 @@ application creates a persistent encryption key inside the data volume for you.
 This mode starts only the web control plane. Add remote controllers from the
 **Controllers** page. It needs no TUN device, network capability, or public
 ZeroTier UDP port.
+
+Published packages intentionally contain only this standard runtime. The
+optional embedded-controller target is never pushed to GitHub Container
+Registry.
 
 When you are ready to put it behind HTTPS, the [deployment guide](docs/DEPLOYMENT.md)
 covers reverse proxies, persistent storage, production settings, and an optional
