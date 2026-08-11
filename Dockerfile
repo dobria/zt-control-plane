@@ -37,9 +37,14 @@ ENV NODE_ENV=production \
     APP_DATA_DIR=/data/app \
     EMBEDDED_ZEROTIER=0
 
+# Package managers are build-only and must not be carried into the runtime.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl gosu tini && \
     rm -rf /var/lib/apt/lists/* && \
+    rm -rf /opt/yarn-v1.22.22 /usr/local/lib/node_modules && \
+    rm -f /usr/local/bin/corepack /usr/local/bin/npm /usr/local/bin/npx \
+      /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn \
+      /usr/local/bin/yarnpkg && \
     groupadd --system --gid 1001 controlplane && \
     useradd --system --uid 1001 --gid controlplane --home-dir /app controlplane && \
     mkdir -p /data/app && \

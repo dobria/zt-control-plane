@@ -102,13 +102,13 @@ The recommended installation uses the versioned image published for the latest
 release. Download the release Compose file and environment template:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/compose.release.yaml
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/.env.example
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/.env.example
 cp .env.example .env
 docker compose -f compose.release.yaml up -d
 ```
 
-The Compose file pins `ghcr.io/dobria/zt-control-plane:0.1.0`. Review each new
+The Compose file pins `ghcr.io/dobria/zt-control-plane:0.1.1`. Review each new
 release before changing that version. The image is built from the matching Git
 tag and published with SBOM and provenance attestations.
 

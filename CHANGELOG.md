@@ -6,6 +6,22 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-11
+
+### Security
+
+- Removed the bundled npm and package-manager toolchain from the final runtime
+  image. These build-only files were unused by the running application and
+  included `tar` 7.5.11, affected by CVE-2026-59873.
+- Kept dependency installation and compilation in isolated build stages while
+  reducing the published image's runtime attack surface.
+
+### Release note
+
+- `v0.1.1` is the first container release. The protected `v0.1.0` source tag
+  remains as an audit record; its publication was stopped by the critical
+  vulnerability gate before any image or GitHub Release was created.
+
 ## [0.1.0] - 2026-08-11
 
 ### Added
@@ -43,5 +59,6 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 - The embedded ZeroTier One image is not distributed through GHCR and remains
   subject to separate upstream licensing terms.
 
-[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.0
+[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.1
+[0.1.0]: https://github.com/dobria/zt-control-plane/tree/v0.1.0

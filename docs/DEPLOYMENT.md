@@ -21,13 +21,13 @@ capabilities, `no-new-privileges`, and a bounded temporary filesystem.
 For the current release:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/compose.release.yaml
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/.env.example
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/.env.example
 cp .env.example .env
 docker compose -f compose.release.yaml up -d
 ```
 
-The release Compose file pins the full `0.1.0` image tag. Avoid deploying only
+The release Compose file pins the full `0.1.1` image tag. Avoid deploying only
 `latest` when repeatability matters. For the strongest pin, replace the image
 tag with the digest published in the corresponding GitHub Release.
 
