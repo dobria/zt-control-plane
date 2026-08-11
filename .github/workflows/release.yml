@@ -146,10 +146,13 @@ jobs:
               actual_digest=""
 
               for attempt in 1 2 3 4 5; do
-                actual_digest="$(
-                  docker buildx imagetools inspect "$reference" 2>/dev/null \
-                    | awk '$1 == "Digest:" { print $2; exit }'
-                )"
+                if inspect_output="$(docker buildx imagetools inspect "$reference" 2>/dev/null)"; then
+                  actual_digest="$(
+                    awk '$1 == "Digest:" { print $2; exit }' <<< "$inspect_output"
+                  )"
+                else
+                  actual_digest=""
+                fi
 
                 if [[ "$actual_digest" == "$PUBLISHED_DIGEST" ]]; then
                   break
