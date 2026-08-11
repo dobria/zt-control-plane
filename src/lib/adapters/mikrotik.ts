@@ -660,19 +660,21 @@ export class MikroTikAdapter implements ControllerAdapter {
   ) {
     const body: Record<string, unknown> = {
       network: networkId,
-      name: input.name || `zt-${networkId.slice(-6)}`,
       instance: await this.activeInstanceName(input.instance),
-      "allow-managed": input.allowManaged === false ? "no" : "yes",
-      "allow-default": input.allowDefault ? "yes" : "no",
-      "allow-global": input.allowGlobal ? "yes" : "no",
     };
-    if (input.comment !== undefined) body.comment = input.comment;
-    if (input.disabled !== undefined)
-      body.disabled = input.disabled ? "yes" : "no";
-    if (input.vrf !== undefined) body.vrf = input.vrf;
-    if (input.arpTimeout !== undefined) body["arp-timeout"] = input.arpTimeout;
-    if (input.disableRunningCheck !== undefined)
-      body["disable-running-check"] = input.disableRunningCheck ? "yes" : "no";
+    // RouterOS supplies stable defaults for a new ZeroTier interface. Sending
+    // those defaults back explicitly makes creation unnecessarily dependent on
+    // the exact RouterOS version and package capabilities.
+    if (input.name) body.name = input.name;
+    if (input.comment) body.comment = input.comment;
+    if (input.disabled) body.disabled = "yes";
+    if (input.vrf && input.vrf !== "main") body.vrf = input.vrf;
+    if (input.arpTimeout && input.arpTimeout !== "auto")
+      body["arp-timeout"] = input.arpTimeout;
+    if (input.disableRunningCheck) body["disable-running-check"] = "yes";
+    if (input.allowManaged === false) body["allow-managed"] = "no";
+    if (input.allowDefault) body["allow-default"] = "yes";
+    if (input.allowGlobal) body["allow-global"] = "yes";
     const created = await this.request<Record<string, unknown>>(
       "zerotier/interface",
       { method: "PUT", body: JSON.stringify(body) },
@@ -707,20 +709,40 @@ export class MikroTikAdapter implements ControllerAdapter {
     if (!id)
       throw new AdapterError("RouterOS interface record ID is missing.", 502);
     const body: Record<string, unknown> = {};
-    if (input.name !== undefined) body.name = input.name;
-    if (input.comment !== undefined) body.comment = input.comment;
-    if (input.disabled !== undefined)
+    if (input.name !== undefined && input.name !== current.name)
+      body.name = input.name;
+    if (input.comment !== undefined && input.comment !== current.comment)
+      body.comment = input.comment;
+    if (input.disabled !== undefined && input.disabled !== current.disabled)
       body.disabled = input.disabled ? "yes" : "no";
-    if (input.vrf !== undefined) body.vrf = input.vrf;
-    if (input.arpTimeout !== undefined) body["arp-timeout"] = input.arpTimeout;
-    if (input.disableRunningCheck !== undefined)
+    if (input.vrf !== undefined && input.vrf !== current.vrf)
+      body.vrf = input.vrf;
+    if (
+      input.arpTimeout !== undefined &&
+      input.arpTimeout !== current.arpTimeout
+    )
+      body["arp-timeout"] = input.arpTimeout;
+    if (
+      input.disableRunningCheck !== undefined &&
+      input.disableRunningCheck !== current.disableRunningCheck
+    )
       body["disable-running-check"] = input.disableRunningCheck ? "yes" : "no";
-    if (input.allowManaged !== undefined)
+    if (
+      input.allowManaged !== undefined &&
+      input.allowManaged !== current.allowManaged
+    )
       body["allow-managed"] = input.allowManaged ? "yes" : "no";
-    if (input.allowDefault !== undefined)
+    if (
+      input.allowDefault !== undefined &&
+      input.allowDefault !== current.allowDefault
+    )
       body["allow-default"] = input.allowDefault ? "yes" : "no";
-    if (input.allowGlobal !== undefined)
+    if (
+      input.allowGlobal !== undefined &&
+      input.allowGlobal !== current.allowGlobal
+    )
       body["allow-global"] = input.allowGlobal ? "yes" : "no";
+    if (!Object.keys(body).length) return current;
     return normalizeInterface({
       ...(current.raw || {}),
       ...(await this.request<Record<string, unknown>>(

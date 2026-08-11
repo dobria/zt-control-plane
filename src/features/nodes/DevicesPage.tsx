@@ -419,7 +419,9 @@ export function DevicesPage({ controllerId }: { controllerId: string }) {
             )}
         </div>
       </div>
-      {error && <div className="alert error">{error}</div>}
+      {error && !open && !moonOpen && (
+        <div className="alert error">{error}</div>
+      )}
       {message && (
         <div className="alert success">
           <Check />
@@ -799,6 +801,7 @@ export function DevicesPage({ controllerId }: { controllerId: string }) {
               </button>
             </div>
             <div className="modal-body form-grid">
+              {error && <div className="alert error full">{error}</div>}
               {activeNode?.type === "mikrotik" && (
                 <label className="field full">
                   <span>ZeroTier instance</span>
@@ -1090,6 +1093,7 @@ export function DevicesPage({ controllerId }: { controllerId: string }) {
               </button>
             </div>
             <div className="modal-body form-grid">
+              {error && <div className="alert error full">{error}</div>}
               <label className="field">
                 <span>World ID</span>
                 <input

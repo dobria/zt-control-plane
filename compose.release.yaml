@@ -3,7 +3,7 @@ name: "${COMPOSE_PROJECT_NAME:-zerotier-control-plane}"
 services:
   control-plane:
     platform: "${DOCKER_PLATFORM:-linux/amd64}"
-    image: "${CONTROL_PLANE_IMAGE:-ghcr.io/dobria/zt-control-plane:0.1.1}"
+    image: "${CONTROL_PLANE_IMAGE:-ghcr.io/dobria/zt-control-plane:0.1.2}"
     restart: unless-stopped
     read_only: true
     cap_drop:
