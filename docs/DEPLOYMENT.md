@@ -11,16 +11,28 @@ need the optional embedded controller.
 ## The recommended setup
 
 The default `runtime` image contains the Apache-2.0 web application and its
-open-source runtime dependencies.
+open-source runtime dependencies. Versioned standard images are published at
+`ghcr.io/dobria/zt-control-plane` from immutable release tags.
 It listens on TCP 3000, stores state below `/data/app`, and requires no TUN
 device or elevated network capabilities. The supplied Compose service also
 runs it as an unprivileged user with a read-only root filesystem, no Linux
 capabilities, `no-new-privileges`, and a bounded temporary filesystem.
 
+For the current release:
+
 ```sh
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.0/.env.example
 cp .env.example .env
-docker compose up -d --build
+docker compose -f compose.release.yaml up -d
 ```
+
+The release Compose file pins the full `0.1.0` image tag. Avoid deploying only
+`latest` when repeatability matters. For the strongest pin, replace the image
+tag with the digest published in the corresponding GitHub Release.
+
+To inspect and build the standard runtime locally, clone the same release tag
+and use `docker compose up -d --build` with `compose.yaml`.
 
 A solid production setup looks like this:
 
@@ -80,7 +92,8 @@ docker compose -f compose.yaml -f compose.embedded.yaml up -d --build
 ```
 
 Read [Embedded controller licensing](EMBEDDED_CONTROLLER.md) first. The
-embedded image is intentionally not the default public artifact.
+embedded image is intentionally not a public registry artifact. Build it
+locally only after reviewing the separate licensing and privilege boundary.
 
 ## Coolify example
 

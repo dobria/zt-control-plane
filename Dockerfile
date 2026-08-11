@@ -92,5 +92,7 @@ EXPOSE 9993/udp
 FROM runtime-base AS runtime
 LABEL org.opencontainers.image.title="ZT Control Plane" \
       org.opencontainers.image.description="Independent multi-provider network control plane" \
-      org.opencontainers.image.licenses="Apache-2.0 AND GPL-2.0-only"
+      org.opencontainers.image.licenses="Apache-2.0 AND GPL-2.0-only" \
+      org.opencontainers.image.source="https://github.com/dobria/zt-control-plane" \
+      org.opencontainers.image.documentation="https://github.com/dobria/zt-control-plane/tree/main/docs"
 USER controlplane:controlplane

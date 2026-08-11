@@ -184,9 +184,11 @@ shortcut for their own account.
 ## Update without surprises
 
 1. Back up `/data`.
-2. Review the pinned versions in `package.json` and `Dockerfile`.
-3. Build the image and run `npm run check`.
-4. Deploy the new image against the same persistent volume.
+2. Read the GitHub Release notes, compatibility boundaries, and known issues.
+3. Update `CONTROL_PLANE_IMAGE` or `compose.release.yaml` to the new immutable
+   version or published digest. Source-build operators should review the pinned
+   versions in `package.json` and `Dockerfile`, run `npm run check`, and rebuild.
+4. Deploy the new standard image against the same persistent volume.
 5. Confirm `/api/health` and one read operation on each external connection.
 6. In embedded mode, also confirm the local controller and node status.
 
