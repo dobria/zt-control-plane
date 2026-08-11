@@ -1,0 +1,66 @@
+name: Mirror existing release to Docker Hub
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing semantic image version without the v prefix
+        required: true
+        default: 0.1.1
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: mirror-docker-hub-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.repository == 'dobria/zt-control-plane'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use the MAJOR.MINOR.PATCH format." >&2
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Copy the existing release without rebuilding it
+        env:
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          minor="${VERSION%.*}"
+          source="ghcr.io/dobria/zt-control-plane:${VERSION}"
+
+          docker buildx imagetools inspect "$source"
+          docker buildx imagetools create \
+            --tag "dobria/zt-control-plane:${VERSION}" \
+            --tag "dobria/zt-control-plane:${minor}" \
+            --tag "dobria/zt-control-plane:latest" \
+            "$source"
+
+          docker buildx imagetools inspect "dobria/zt-control-plane:${VERSION}"
