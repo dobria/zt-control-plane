@@ -102,25 +102,25 @@ The recommended installation uses the versioned image published for the latest
 release. Download the release Compose file and environment template:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/compose.release.yaml
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/.env.example
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.2/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.2/.env.example
 cp .env.example .env
 docker compose -f compose.release.yaml up -d
 ```
 
 The Compose file defaults to GitHub Container Registry and pins the complete
-`0.1.1` version. To deploy the same release from Docker Hub instead:
+`0.1.2` version. To deploy the same release from Docker Hub instead:
 
 ```sh
-CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.1 \
+CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.2 \
   docker compose -f compose.release.yaml up -d
 ```
 
 Both registry names receive the same release build:
 
 ```sh
-docker pull ghcr.io/dobria/zt-control-plane:0.1.1
-docker pull dobria/zt-control-plane:0.1.1
+docker pull ghcr.io/dobria/zt-control-plane:0.1.2
+docker pull dobria/zt-control-plane:0.1.2
 ```
 
 Check [GitHub Releases](https://github.com/dobria/zt-control-plane/releases) for

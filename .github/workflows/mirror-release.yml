@@ -6,7 +6,7 @@ on:
       version:
         description: Existing semantic image version without the v prefix
         required: true
-        default: 0.1.1
+        default: 0.1.2
         type: string
 
 permissions:

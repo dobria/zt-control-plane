@@ -18,7 +18,7 @@ immutable release tags to both registries:
 - `docker.io/dobria/zt-control-plane`
 
 Both names refer to the same release build. The supplied Compose file uses
-GHCR by default. Set `CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.1` if you
+GHCR by default. Set `CONTROL_PLANE_IMAGE=dobria/zt-control-plane:0.1.2` if you
 prefer Docker Hub.
 It listens on TCP 3000, stores state below `/data/app`, and requires no TUN
 device or elevated network capabilities. The supplied Compose service also
@@ -28,13 +28,13 @@ capabilities, `no-new-privileges`, and a bounded temporary filesystem.
 For the current release:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/compose.release.yaml
-curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.1/.env.example
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.2/compose.release.yaml
+curl -fsSLO https://raw.githubusercontent.com/dobria/zt-control-plane/v0.1.2/.env.example
 cp .env.example .env
 docker compose -f compose.release.yaml up -d
 ```
 
-The release Compose file pins the full `0.1.1` image tag. Avoid deploying only
+The release Compose file pins the full `0.1.2` image tag. Avoid deploying only
 `latest` when repeatability matters. For the strongest pin, replace the image
 tag with the digest published in the corresponding GitHub Release.
 

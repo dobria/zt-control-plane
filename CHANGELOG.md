@@ -6,6 +6,17 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-11
+
+### Fixed
+
+- Made RouterOS Joined network creation compatible across RouterOS versions by
+  omitting optional interface values that match RouterOS defaults.
+- Updated RouterOS client interfaces with only the values that actually
+  changed, avoiding rejected writes of unchanged runtime configuration.
+- Kept RouterOS validation and provider errors visible inside the Joined
+  network dialog so corrective action can be taken without closing it.
+
 ## [0.1.1] - 2026-08-11
 
 ### Security
@@ -59,6 +70,7 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 - The embedded ZeroTier One image is not distributed through GHCR and remains
   subject to separate upstream licensing terms.
 
-[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.2
 [0.1.1]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.1
 [0.1.0]: https://github.com/dobria/zt-control-plane/tree/v0.1.0

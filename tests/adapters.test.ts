@@ -831,11 +831,8 @@ describe("MikroTik RouterOS REST adapter", () => {
     const joinCall = calls.find((call) => call.init.method === "PUT");
     assert.deepEqual(JSON.parse(String(joinCall?.init.body)), {
       network: "a09acf0234abcdef",
-      name: "zt-branch",
       instance: "zt1",
-      "allow-managed": "yes",
-      "allow-default": "no",
-      "allow-global": "no",
+      name: "zt-branch",
     });
     assert.ok(
       calls.some(
@@ -854,6 +851,56 @@ describe("MikroTik RouterOS REST adapter", () => {
       "disable-running-check": "yes",
       "allow-default": "yes",
     });
+  });
+
+  it("does not write unchanged RouterOS client interface fields", async () => {
+    const calls: Array<{ url: string; init: RequestInit }> = [];
+    const interfaceRow = {
+      ".id": "*9",
+      instance: "zt1",
+      network: "a09acf0234abcdef",
+      name: "zt-office",
+      comment: "Office overlay",
+      disabled: "no",
+      running: "yes",
+      status: "OK",
+      vrf: "main",
+      "arp-timeout": "auto",
+      "disable-running-check": "no",
+      "allow-managed": "yes",
+      "allow-default": "no",
+      "allow-global": "no",
+    };
+    const fetcher: Fetcher = async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).endsWith("/rest/zerotier"))
+        return json([{ name: "zt1", state: "running", disabled: "false" }]);
+      return json([interfaceRow]);
+    };
+    const adapter = new MikroTikAdapter(
+      record("mikrotik"),
+      { username: "admin", password: "secret" },
+      fetcher,
+    );
+
+    const result = await adapter.updateClientNetwork(
+      "a09acf0234abcdef",
+      {
+        instance: "zt1",
+        name: "zt-office",
+        comment: "Office overlay",
+        disabled: false,
+        vrf: "main",
+        arpTimeout: "auto",
+        disableRunningCheck: false,
+        allowManaged: true,
+        allowDefault: false,
+        allowGlobal: false,
+      },
+    );
+
+    assert.equal(result.name, "zt-office");
+    assert.equal(calls.some((call) => call.init.method === "PATCH"), false);
   });
 
   it("surfaces RouterOS error details instead of a generic Bad Request", async () => {
