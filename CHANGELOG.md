@@ -6,6 +6,29 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-10
+
+### Fixed
+
+- Fixed Flow Rules validation when selecting Ping & traceroute. The template
+  now emits the compiler-supported `icmp4` protocol name for IPv4 ICMP and
+  retains `icmp6` for IPv6.
+- Added compiler regression coverage for Ping alone and alongside HTTP/HTTPS,
+  with the Ethernet guardrail enabled and disabled.
+
+### Security
+
+- Updated the development dependency `js-yaml` to 4.3.2 to address
+  GHSA-2883-xcg3-v3hh, a denial-of-service issue in YAML merge processing.
+
+### Changed
+
+- Updated Next.js and its ESLint configuration to 16.3.4, Undici to 8.10.1,
+  Lucide React to 1.39.0, tsx to 4.23.13, and React DOM types to 19.2.5.
+- Updated the pinned Docker Buildx setup action to 4.3.0 and the optional
+  embedded-controller build image to Rust 1.98.
+- Updated the release Compose example and deployment instructions to 0.1.3.
+
 ## [0.1.2] - 2026-08-11
 
 ### Fixed
@@ -70,7 +93,8 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 - The embedded ZeroTier One image is not distributed through GHCR and remains
   subject to separate upstream licensing terms.
 
-[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.3
 [0.1.2]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.2
 [0.1.1]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.1
 [0.1.0]: https://github.com/dobria/zt-control-plane/tree/v0.1.0

@@ -132,7 +132,8 @@ export function generateFlowSource(policy: FlowPolicy) {
   }
   lines.push("accept ethertype arp;");
   if (policy.services.includes("ping"))
-    lines.push("accept ipprotocol icmp;", "accept ipprotocol icmp6;");
+    // `icmp` is a reserved match keyword in the ZeroTier rule compiler.
+    lines.push("accept ipprotocol icmp4;", "accept ipprotocol icmp6;");
   if (
     policy.services.some((service) =>
       ["dns", "http", "https", "ssh", "rdp", "smb"].includes(service),
