@@ -15,7 +15,7 @@ RUN curl -fsSL "https://github.com/zerotier/ZeroTierOne/archive/refs/tags/${ZERO
     tar -xzf zerotier.tar.gz --strip-components=1 && \
     make -j"$(nproc)" ZT_NONFREE=1 zerotier-one zerotier-cli zerotier-idtool
 
-FROM node:22-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436 AS dependencies
+FROM node:25-bookworm-slim@sha256:81db02c4b671288a03915da9534dbd54f96d0e7c24d80ccc54f5b36b2e684370 AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci && \
@@ -29,7 +29,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM node:22-bookworm-slim@sha256:d649c27dae7ba0137b3cef5dd75baa422c08dc3d9e3fc0c23dfb172dc3cc6436 AS runtime-base
+FROM node:25-bookworm-slim@sha256:81db02c4b671288a03915da9534dbd54f96d0e7c24d80ccc54f5b36b2e684370 AS runtime-base
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
