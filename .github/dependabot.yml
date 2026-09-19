@@ -13,6 +13,11 @@ updates:
           - react-dom
           - "@types/react"
           - "@types/react-dom"
+      nextjs:
+        applies-to: version-updates
+        patterns:
+          - next
+          - eslint-config-next
     ignore:
       # Match the Node.js major used by CI and the production image.
       - dependency-name: "@types/node"
@@ -28,6 +33,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # Keep the container runtime on the same Node.js major as CI and typings.
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
