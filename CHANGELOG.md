@@ -6,6 +6,20 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-09-19
+
+### Security
+
+- Updated the direct Undici runtime dependency to 8.10.2. The upstream release
+  addresses multiple issues in cache isolation, response framing,
+  decompression limits, TLS option preservation, and WebSocket error handling.
+
+### Changed
+
+- Updated React, React DOM, and their TypeScript definitions to 19.3.0.
+- Updated Lucide React to 1.44.0.
+- Updated the release Compose example and deployment instructions to 0.1.4.
+
 ## [0.1.3] - 2026-09-10
 
 ### Fixed
@@ -93,7 +107,8 @@ follow [Semantic Versioning](https://semver.org/), and the format follows
 - The embedded ZeroTier One image is not distributed through GHCR and remains
   subject to separate upstream licensing terms.
 
-[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/dobria/zt-control-plane/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.4
 [0.1.3]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.3
 [0.1.2]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.2
 [0.1.1]: https://github.com/dobria/zt-control-plane/releases/tag/v0.1.1
