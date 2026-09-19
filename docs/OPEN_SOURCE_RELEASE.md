@@ -54,8 +54,12 @@ trust.
 1. Prepare a pull request that updates the package version, changelog, release
    notes, and any version-pinned deployment examples.
 2. Merge only after CI and review pass on the exact release diff.
-3. Create a signed, annotated `vMAJOR.MINOR.PATCH` tag on the merged `main`
-   commit and push only that tag.
+3. Confirm that Git signing is configured with
+   `git config --get user.signingkey`. Create the signed, annotated tag with
+   `git tag -s vMAJOR.MINOR.PATCH -m "ZT Control Plane vMAJOR.MINOR.PATCH"`,
+   verify it locally with `git tag -v vMAJOR.MINOR.PATCH`, and push only that
+   tag from the merged `main` commit. The release workflow also requires GitHub
+   to report the tag signature as verified.
 4. Let `.github/workflows/release.yml` validate the version, test the source,
    scan the standard image, publish it to GHCR, attest it, and create the GitHub
    Release.

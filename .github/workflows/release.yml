@@ -19,7 +19,7 @@ env:
 jobs:
   verify:
     if: github.repository == 'dobria/zt-control-plane'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,6 +35,35 @@ jobs:
           package_version="$(node -p "require('./package.json').version")"
           if [[ "v${package_version}" != "$GITHUB_REF_NAME" ]]; then
             echo "package.json version ${package_version} does not match ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+
+      - name: Require a verified signed tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag_object_sha="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}" \
+              --jq 'select(.object.type == "tag") | .object.sha'
+          )"
+
+          if [[ -z "$tag_object_sha" ]]; then
+            echo "Release tags must be annotated and cryptographically signed." >&2
+            exit 1
+          fi
+
+          verified="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" \
+              --jq '.verification.verified'
+          )"
+
+          if [[ "$verified" != "true" ]]; then
+            reason="$(
+              gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object_sha}" \
+                --jq '.verification.reason'
+            )"
+            echo "GitHub could not verify ${GITHUB_REF_NAME}: ${reason}." >&2
             exit 1
           fi
 
@@ -75,7 +104,7 @@ jobs:
 
   publish:
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: write
