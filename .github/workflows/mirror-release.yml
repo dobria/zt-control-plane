@@ -20,7 +20,7 @@ concurrency:
 jobs:
   mirror:
     if: github.repository == 'dobria/zt-control-plane'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Validate version
