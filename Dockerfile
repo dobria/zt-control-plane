@@ -3,7 +3,7 @@
 ARG ZEROTIER_VERSION=1.16.2
 ARG ZEROTIER_SHA256=2c607f573c6e38815433af289d364a689a203b18b51125f06c4472014d0657f0
 
-FROM rust:1.98-bookworm@sha256:82150a52ec202c1b14d7817e14516c392bb7f5cfebd88f1ed531cb37ebd39922 AS zerotier-builder
+FROM rust:1.99-bookworm@sha256:114c7a4425406451c2866b6aafe69fe29b1b298832db1277d411ac73c82d04d6 AS zerotier-builder
 ARG ZEROTIER_VERSION
 ARG ZEROTIER_SHA256
 RUN apt-get update && apt-get install -y --no-install-recommends \
