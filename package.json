@@ -20,8 +20,8 @@
     "lucide-react": "1.46.0",
     "next": "16.3.5",
     "qrcode": "1.5.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "undici": "8.10.2",
     "zerotier-rule-compiler": "1.2.2-2"
   },
